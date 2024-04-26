@@ -1,9 +1,9 @@
 from rest_framework import serializers
 
-from reservation.models.employee_model import Employee
+from reservation.models import Employee
 
 
 class EmployeeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employee
-        fields = ('employee_type')
+        fields = ("immediate_head", "department")

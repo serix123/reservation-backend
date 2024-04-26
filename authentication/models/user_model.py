@@ -3,7 +3,14 @@ from django.contrib.auth.models import BaseUserManager, AbstractUser
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, first_name: str, last_name: str, email: str, password: str = None, **extra_fields) -> "User":
+    def create_user(
+        self,
+        first_name: str,
+        last_name: str,
+        email: str,
+        password: str = None,
+        **extra_fields
+    ) -> "User":
         extra_fields.setdefault("is_staff", False)
         extra_fields.setdefault("is_superuser", False)
 
@@ -22,7 +29,9 @@ class UserManager(BaseUserManager):
         user.save()
         return user
 
-    def create_superuser(self, first_name: str, last_name: str, email: str, password: str) -> "User":
+    def create_superuser(
+        self, first_name: str, last_name: str, email: str, password: str
+    ) -> "User":
         user = self.create_user(
             email=email,
             first_name=first_name,
