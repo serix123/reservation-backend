@@ -1,0 +1,10 @@
+autopep8
+Django
+django-cors-headers
+djangorestframework
+djangorestframework-simplejwt
+psycopg2-binary
+PyJWT
+pylint
+pylint-django
+pylint-plugin-utils
