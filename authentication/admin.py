@@ -7,6 +7,7 @@ from .models import User
 
 class AccountAdmin(UserAdmin):
     list_display = (
+        "id",
         "__str__",
         "email",
         "date_joined",
@@ -16,7 +17,7 @@ class AccountAdmin(UserAdmin):
     )
     search_fields = ("email", "first_name", "last_name")
     readonly_fields = ("date_joined", "last_login")
-    ordering = ["first_name"]
+    ordering = ["id"]
 
     add_fieldsets = (
         (

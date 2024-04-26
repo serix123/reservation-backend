@@ -10,13 +10,14 @@ class EmployeeAdmin(admin.ModelAdmin):
     readonly_fields = ("id",)
 
     list_display = (
+        "id",
         "__str__",
         "immediate_head",
         "department",
         "is_admin",
         "date_joined",
     )
-    ordering = ["first_name"]
+    ordering = ["id"]
     add_fieldsets = (
         (
             None,
