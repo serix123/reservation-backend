@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-from reservation.viewsets import DepartmentViewSet
+from reservation.viewsets import DepartmentViewSet, FacilityViewSet
 from reservation.views import department_views, employee_views
 
 
@@ -34,6 +34,7 @@ employee_paths = [
 
 router = DefaultRouter()
 router.register(r"department", DepartmentViewSet, basename="vs-department")
+router.register(r"facility", FacilityViewSet, basename="vs-facility")
 
 urlpatterns = [
     path("departments/", include(department_paths)),
