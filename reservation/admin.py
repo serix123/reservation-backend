@@ -1,7 +1,7 @@
 from django.contrib import admin
-from reservation.models import Department
+from reservation.models import Department, Employee, Facility
 
-from reservation.models import Employee
+# from reservation.models import Employee
 
 # Register your models here.
 
@@ -54,5 +54,16 @@ class DepartmentAdmin(admin.ModelAdmin):
     )
 
 
+class FacilityAdmin(admin.ModelAdmin):
+    readonly_fields = ("id",)
+    list_display = (
+        "id",
+        "name",
+        "department",
+        "person_in_charge",
+    )
+
+
+admin.site.register(Facility, FacilityAdmin)
 admin.site.register(Employee, EmployeeAdmin)
 admin.site.register(Department, DepartmentAdmin)

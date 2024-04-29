@@ -1,47 +1,47 @@
 from django.db import models
 
 
-from reservation.models import Employee
+from reservation.models import Department, Employee
+
+
+def get_default_department_id():
+    from reservation.models import (
+        Department,
+    )  # Import inside function to avoid circular import issues
+
+    default_department = Department.objects.first()
+    if default_department:
+        return default_department.id
+    return None  # Ensure there is a sensible default, or handle this case properly!
+
+
+def get_default_person_in_charge():
+    from reservation.models import (
+        Employee,
+    )  # Import inside function to avoid circular import issues
+
+    default_person_in_charge = Employee.objects.first()
+    if default_person_in_charge:
+        return default_person_in_charge.id
+    return None  # Ensure there is a sensible default, or handle this case properly!
 
 
 class Facility(models.Model):
     name = models.CharField(max_length=100)
-    # location_description = models.TextField()
-    # capacity = models.IntegerField()
+    department = models.ForeignKey(
+        Department,
+        on_delete=models.CASCADE,
+        related_name="facilities",
+        null=True,
+        default=get_default_department_id,
+    )
     person_in_charge = models.ForeignKey(
         Employee,
         on_delete=models.SET_NULL,
         null=True,
         related_name="managed_facilities",
+        default=get_default_person_in_charge,
     )
 
     def __str__(self):
         return self.name
-
-
-# class Approval(models.Model):
-#     request = models.ForeignKey(
-#         ReservationRequest, on_delete=models.CASCADE, related_name="approvals"
-#     )
-#     approver = models.ForeignKey(
-#         Employee, on_delete=models.CASCADE, related_name="given_approvals"
-#     )
-#     approval_type = models.CharField(
-#         max_length=20,
-#         choices=[
-#             ("Department Superior", "Department Superior"),
-#             ("Facility Manager", "Facility Manager"),
-#         ],
-#     )
-#     status = models.CharField(
-#         max_length=10,
-#         choices=[
-#             ("Pending", "Pending"),
-#             ("Approved", "Approved"),
-#             ("Rejected", "Rejected"),
-#         ],
-#     )
-#     date_approved = models.DateTimeField(null=True, blank=True)
-
-#     def __str__(self):
-#         return f"{self.approval_type} by {self.approver.name} for {self.request}"
