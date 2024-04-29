@@ -1,6 +1,7 @@
 autopep8
 Django
 django-cors-headers
+django-recurrence
 djangorestframework
 djangorestframework-simplejwt
 psycopg2-binary
