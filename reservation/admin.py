@@ -1,7 +1,6 @@
 from django.contrib import admin
-from reservation.models import Department, Employee, Facility
-
-# from reservation.models import Employee
+from recurrence.forms import RecurrenceField
+from reservation.models import Department, Employee, Equipment, Event, Facility
 
 # Register your models here.
 
@@ -64,6 +63,37 @@ class FacilityAdmin(admin.ModelAdmin):
     )
 
 
+class EquipmentAdmin(admin.ModelAdmin):
+    list_display = [
+        "id",
+        "equipment_name",
+        "equipment_type",
+        "equipment_quantity",
+        "work_type",
+    ]
+    list_filter = ["equipment_type"]
+    search_fields = ["equipment_name", "equipment_type"]
+    ordering = ["equipment_name"]
+
+
+class EventAdmin(admin.ModelAdmin):
+    list_display = ["event_name", "organizer_name", "start_time", "end_time", "status"]
+    list_filter = [
+        "event_name",
+        "organizer_name",
+        "status",
+        "reserved_facility",
+        "department",
+        "start_time",
+    ]
+    search_fields = ["organizer_name", "department"]
+    formfield_overrides = {
+        RecurrenceField: {"widget": RecurrenceField.widget},
+    }
+
+
+admin.site.register(Event, EventAdmin)
+admin.site.register(Equipment, EquipmentAdmin)
 admin.site.register(Facility, FacilityAdmin)
 admin.site.register(Employee, EmployeeAdmin)
 admin.site.register(Department, DepartmentAdmin)
