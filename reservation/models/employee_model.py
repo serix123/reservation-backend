@@ -3,7 +3,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from authentication.models import User
-from reservation.models import Department
+from reservation.models.department_model import Department
 
 
 class Employee(models.Model):
@@ -25,7 +25,8 @@ class Employee(models.Model):
     immediate_head = models.ForeignKey(
         "self", on_delete=models.SET_NULL, null=True, related_name="subordinates"
     )
-    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True)
+    department = models.ForeignKey(
+        Department, on_delete=models.SET_NULL, null=True)
 
     REQUIRED_FIELDS = ["user"]
 

@@ -1,6 +1,13 @@
 from django.contrib import admin
-from recurrence.forms import RecurrenceField
-from reservation.models import Department, Employee, Equipment, Event, Facility
+# from recurrence.forms import RecurrenceField
+from reservation.models import (
+    Department,
+    Employee,
+    Equipment,
+    Event,
+    Facility,
+    Approval,
+)
 
 # Register your models here.
 
@@ -77,21 +84,36 @@ class EquipmentAdmin(admin.ModelAdmin):
 
 
 class EventAdmin(admin.ModelAdmin):
-    list_display = ["event_name", "organizer_name", "start_time", "end_time", "status"]
+    list_display = ["event_name", "organizer_name",
+                    "start_time", "end_time", "status"]
     list_filter = [
         "event_name",
-        "organizer_name",
+        "organizer",
         "status",
         "reserved_facility",
         "department",
         "start_time",
     ]
-    search_fields = ["organizer_name", "department"]
-    formfield_overrides = {
-        RecurrenceField: {"widget": RecurrenceField.widget},
-    }
+    search_fields = ["organizer", "department"]
+    # formfield_overrides = {
+    #     RecurrenceField: {"widget": RecurrenceField.widget},
+    # }
 
 
+class ApprovalAdmin(admin.ModelAdmin):
+    list_display = ['event', 'applicant', 'l1_approver', 'l2_approver',
+                    'status', 'applicant_superior_approved', 'facility_authority_approved']
+    actions = ['make_approved']
+
+    def make_approved(self, request, queryset):
+        for approval in queryset:
+            approval.approve_by_l1(request.user)
+            approval.approve_by_l2(request.user)
+            approval.save()
+    make_approved.short_description = "Mark selected as approved"
+
+
+admin.site.register(Approval, ApprovalAdmin)
 admin.site.register(Event, EventAdmin)
 admin.site.register(Equipment, EquipmentAdmin)
 admin.site.register(Facility, FacilityAdmin)

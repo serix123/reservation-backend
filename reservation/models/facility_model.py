@@ -1,7 +1,7 @@
 from django.db import models
 
-
-from reservation.models import Department, Employee
+from reservation.models.department_model import Department
+from reservation.models.employee_model import Employee
 
 
 def get_default_department_id():

@@ -1,16 +1,29 @@
 from rest_framework import viewsets
-from reservation.models import Event
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from reservation.models import Approval, Event
 from reservation.serializers import EventSerializer
 
 
 class EventViewSet(viewsets.ModelViewSet):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        # This will save the Event instance
+        instance = serializer.save()
+
+        # Automatically create an Approval instance when a new Event is created
+        Approval.objects.create(
+            event=instance,
+            applicant=instance.organizer,
+            status='pending'  # Default status
+        )
 
     def get_queryset(self):
         queryset = self.queryset
         event_name = self.request.query_params.get("event_name")
-        organizer_name = self.request.query_params.get("organizer_name")
+        organizer = self.request.query_params.get("organizer_name")
         equipment_id = self.request.query_params.get("id")
         start_date = self.request.query_params.get("start_date")
         end_date = self.request.query_params.get("end_date")
@@ -25,8 +38,8 @@ class EventViewSet(viewsets.ModelViewSet):
             )
         if event_name:
             queryset = queryset.filter(name__icontains=event_name)
-        if organizer_name:
-            queryset = queryset.filter(name__icontains=organizer_name)
+        if organizer:
+            queryset = queryset.filter(name__icontains=organizer)
         if equipment_id:
             queryset = queryset.filter(id=equipment_id)
 
