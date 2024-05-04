@@ -24,3 +24,16 @@ def register_admin(request):
         if user:
             return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def register_employee(request):
+    user = request.user
+    serializer = UserSerializer(
+        data=request.data, context={'request': request})
+    if serializer.is_valid():
+        user = serializer.create_employee_and_assign()
+        if user:
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

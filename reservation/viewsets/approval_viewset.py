@@ -12,27 +12,30 @@ class ApprovalViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """
         This view should return a list of all the approvals
-        for the currently authenticated user if they are a superior.
+        for the currently authenticated user if they are a immediate_head_approver.
         """
+        queryset = self.queryset
+        immediate_head_approver = self.request.query_params.get(
+            "immediate_head_approver")
+        person_in_charge_approver = self.request.query_params.get(
+            "person_in_charge_approver")
 
-        # applicant = self.request.query_params.get("applicant")
-        l1_approver = self.request.query_params.get("superior")
-        l2_approver = self.request.query_params.get("person_in_charge")
-
-        # if applicant:
+        # requesitioner = self.request.query_params.get("requesitioner")
+        # if requesitioner:
         #     queryset = queryset.filter(
-        #         applicant=applicant)
+        #         requesitioner=requesitioner)
 
-        if l1_approver:
+        if immediate_head_approver is not None:
             queryset = queryset.filter(
-                l1_approver=l1_approver)
+                immediate_head_approver=immediate_head_approver)
             return queryset
 
-        if l2_approver:
+        if person_in_charge_approver is not None:
             queryset = queryset.filter(
-                l2_approver=l2_approver)
+                person_in_charge_approver=person_in_charge_approver)
             return queryset
 
         user = self.request.user
         employee = Employee.objects.get(user=user)
-        return Approval.objects.filter(applicant=employee)
+        queryset = queryset.filter(requesitioner=employee)
+        return queryset

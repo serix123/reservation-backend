@@ -7,8 +7,10 @@ from reservation.serializers import EmployeeSerializer
 class UserSerializer(serializers.ModelSerializer):
 
     employee = EmployeeSerializer(required=False)
-    password = serializers.CharField(style={"input_type": "password"}, write_only=True)
-    password2 = serializers.CharField(style={"input_type": "password"}, write_only=True)
+    password = serializers.CharField(
+        style={"input_type": "password"}, write_only=True)
+    password2 = serializers.CharField(
+        style={"input_type": "password"}, write_only=True)
 
     class Meta:
         model = User
@@ -30,7 +32,8 @@ class UserSerializer(serializers.ModelSerializer):
         password2 = self.validated_data.pop("password2")
 
         if password != password2:
-            raise serializers.ValidationError({"password": "Passwords must match"})
+            raise serializers.ValidationError(
+                {"password": "Passwords must match"})
 
         user = User.objects.create_user(
             first_name=self.validated_data["first_name"],
@@ -54,7 +57,8 @@ class UserSerializer(serializers.ModelSerializer):
         password2 = self.validated_data.pop("password2")
 
         if password != password2:
-            raise serializers.ValidationError({"password": "Passwords must match"})
+            raise serializers.ValidationError(
+                {"password": "Passwords must match"})
 
         user = User.objects.create_superuser(
             first_name=self.validated_data["first_name"],
@@ -68,6 +72,34 @@ class UserSerializer(serializers.ModelSerializer):
             user=user,
             first_name=self.validated_data["first_name"],
             last_name=self.validated_data["last_name"],
+            **employee_data
+        )
+
+        return user
+
+    def create_employee_and_assign(self):
+        password = self.validated_data.pop("password")
+        password2 = self.validated_data.pop("password2")
+
+        if password != password2:
+            raise serializers.ValidationError(
+                {"password": "Passwords must match"})
+
+        user = User.objects.create_user(
+            first_name=self.validated_data["first_name"],
+            last_name=self.validated_data["last_name"],
+            email=self.validated_data["email"],
+            password=password,
+        )
+        # Access the requesting user from the serializer context
+        registering_user = self.context['request'].user.employee
+        employee_data = self.validated_data.pop("employee", {})
+        Employee.objects.create(
+            user=user,
+            first_name=self.validated_data["first_name"],
+            last_name=self.validated_data["last_name"],
+            immediate_head=registering_user,
+            department=registering_user.department,
             **employee_data
         )
 

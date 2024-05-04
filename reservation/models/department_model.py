@@ -3,7 +3,7 @@ from django.db import models
 
 class Department(models.Model):
     name = models.CharField(max_length=100)
-    superior = models.ForeignKey(
+    immediate_head = models.ForeignKey(
         "Employee",
         on_delete=models.SET_NULL,
         null=True,

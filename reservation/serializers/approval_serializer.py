@@ -3,23 +3,30 @@ from reservation.models import Approval, Employee
 
 
 class ApprovalSerializer(serializers.ModelSerializer):
-    applicant = serializers.PrimaryKeyRelatedField(
+    requesitioner = serializers.PrimaryKeyRelatedField(
         queryset=Employee.objects.all(),
         required=False,  # Not required for updates
         allow_null=True,  # Allows the person_in_charge to be null
     )
-    l1_approver = serializers.PrimaryKeyRelatedField(
+    immediate_head_approver = serializers.PrimaryKeyRelatedField(
         queryset=Employee.objects.all(),
         required=False,  # Not required for updates
         allow_null=True,  # Allows the person_in_charge to be null
     )
-    l2_approver = serializers.PrimaryKeyRelatedField(
+    person_in_charge_approver = serializers.PrimaryKeyRelatedField(
         queryset=Employee.objects.all(),
         required=False,  # Not required for updates
         allow_null=True,  # Allows the person_in_charge to be null
     )
+    # immediate_head_approver = serializers.ReadOnlyField()
+    # person_in_charge_approver = serializers.ReadOnlyField()
+
+    def validate_status(self, value):
+        if value not in (-1, 0, 1):
+            raise serializers.ValidationError("Invalid status for approval.")
+        return value
 
     class Meta:
         model = Approval
-        fields = ['id', 'event', 'applicant', 'status',
-                  'l1_approver', 'l2_approver']
+        fields = ['id', 'event', 'requesitioner', 'status',
+                  'immediate_head_approver', 'person_in_charge_approver']

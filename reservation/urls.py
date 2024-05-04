@@ -11,11 +11,16 @@ from reservation.viewsets import (
 from reservation.views import (
     department_views,
     employee_views,
+    approve_by_immediate_head,
+    revoke_by_immediate_head,
+    reject_by_immediate_head,
     approve_by_person_in_charge,
-    approve_by_superior,
     revoke_by_person_in_charge,
-    revoke_by_superior,
-    get_all
+    reject_by_person_in_charge,
+    approve_by_admin,
+    revoke_by_admin,
+    reject_by_admin,
+    get_all,
 )
 
 
@@ -47,14 +52,24 @@ employee_paths = [
 ]
 
 approver_paths = [
-    path('approve_by_superior/<int:pk>/',
-         approve_by_superior, name='approve_by_superior'),
+    path('approve_by_immediate_head/<int:pk>/',
+         approve_by_immediate_head, name='approve_by_immediate_head'),
     path('approve_by_person_in_charge/<int:pk>/',
          approve_by_person_in_charge, name='approve_by_person_in_charge'),
+    path('approve_by_admin/<int:pk>/',
+         approve_by_admin, name='approve_by_admin'),
     path('revoke_by_person_in_charge/<int:pk>/',
          revoke_by_person_in_charge, name='revoke_by_person_in_charge'),
-    path('revoke_by_superior/<int:pk>/',
-         revoke_by_superior, name='revoke_by_superior'),
+    path('revoke_by_immediate_head/<int:pk>/',
+         revoke_by_immediate_head, name='revoke_by_immediate_head'),
+    path('revoke_by_admin/<int:pk>/',
+         revoke_by_admin, name='revoke_by_admin'),
+    path('reject_by_immediate_head/<int:pk>/',
+         reject_by_immediate_head, name='reject_by_immediate_head'),
+    path('reject_by_person_in_charge/<int:pk>/',
+         reject_by_person_in_charge, name='reject_by_person_in_charge'),
+    path('reject_by_admin/<int:pk>/',
+         reject_by_admin, name='reject_by_admin'),
     path('', get_all, name='get-all-approval'),
 ]
 

@@ -14,5 +14,7 @@ token_paths = [
 urlpatterns = [
     path("register/", user_views.register, name="user-registration"),
     path("register/admin/", user_views.register_admin, name="admin-registration"),
+    path("register/employee/", user_views.register_employee,
+         name="employee-registration"),
     path("token/", include(token_paths)),
 ]

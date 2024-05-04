@@ -64,7 +64,7 @@ def update_employees_department(request):
         # Update the department for all specified employees
         Employee.objects.filter(id__in=employee_ids).update(department=department)
         Employee.objects.filter(id__in=employee_ids).update(
-            immediate_head=department.superior
+            immediate_head=department.immediate_head
         )
 
         return Response(
