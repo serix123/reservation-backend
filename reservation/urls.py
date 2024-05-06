@@ -21,6 +21,9 @@ from reservation.views import (
     revoke_by_admin,
     reject_by_admin,
     get_all,
+    get_user_notification,
+    cancel_event,
+    update_event, partial_update_event,
 )
 
 
@@ -52,25 +55,37 @@ employee_paths = [
 ]
 
 approver_paths = [
-    path('approve_by_immediate_head/<int:pk>/',
+    path('approve_by_immediate_head/<str:slip_number>/',
          approve_by_immediate_head, name='approve_by_immediate_head'),
-    path('approve_by_person_in_charge/<int:pk>/',
+    path('approve_by_person_in_charge/<str:slip_number>/',
          approve_by_person_in_charge, name='approve_by_person_in_charge'),
-    path('approve_by_admin/<int:pk>/',
+    path('approve_by_admin/<str:slip_number>/',
          approve_by_admin, name='approve_by_admin'),
-    path('revoke_by_person_in_charge/<int:pk>/',
+    path('revoke_by_person_in_charge/<str:slip_number>/',
          revoke_by_person_in_charge, name='revoke_by_person_in_charge'),
-    path('revoke_by_immediate_head/<int:pk>/',
+    path('revoke_by_immediate_head/<str:slip_number>/',
          revoke_by_immediate_head, name='revoke_by_immediate_head'),
-    path('revoke_by_admin/<int:pk>/',
+    path('revoke_by_admin/<str:slip_number>/',
          revoke_by_admin, name='revoke_by_admin'),
-    path('reject_by_immediate_head/<int:pk>/',
+    path('reject_by_immediate_head/<str:slip_number>/',
          reject_by_immediate_head, name='reject_by_immediate_head'),
-    path('reject_by_person_in_charge/<int:pk>/',
+    path('reject_by_person_in_charge/<str:slip_number>/',
          reject_by_person_in_charge, name='reject_by_person_in_charge'),
-    path('reject_by_admin/<int:pk>/',
+    path('reject_by_admin/<str:slip_number>/',
          reject_by_admin, name='reject_by_admin'),
     path('', get_all, name='get-all-approval'),
+]
+
+events_paths = [
+    path("cancel/<str:slip_number>/", cancel_event,
+         name="cancel_event"),
+    path('update/<str:slip_number>/',
+         update_event, name='update-event'),
+    path('partial-update/<str:slip_number>/',
+         partial_update_event, name='partial-update-event'),
+]
+notification_paths = [
+    path("", get_user_notification, name="user-notification-get"),
 ]
 
 router = DefaultRouter()
@@ -81,6 +96,8 @@ router.register(r"facility", FacilityViewSet, basename="vs-facility")
 router.register(r"event", EventViewSet, basename="vs-event")
 
 urlpatterns = [
+    path("events/", include(events_paths)),
+    path("notifications/", include(notification_paths)),
     path("departments/", include(department_paths)),
     path("employee/", include(employee_paths)),
     path("approval/actions/", include(approver_paths)),

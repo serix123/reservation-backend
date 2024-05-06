@@ -32,6 +32,13 @@ def get(request, pk):
     serializer = EmployeeSerializer(employee)
     return Response(serializer.data)
 
+@api_view(["GET"])
+def get(request, pk):
+    # Try to get the employee or return 404 if not found
+    employee = get_object_or_404(Employee, pk=pk)
+    serializer = EmployeeSerializer(employee)
+    return Response(serializer.data)
+
 
 @api_view(["PATCH"])
 # Add appropriate permissions as needed

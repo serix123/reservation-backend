@@ -1,6 +1,10 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from reservation.models import Event
+import datetime
+
+from reservation.models import Event, Notification
 from reservation.serializers import EventSerializer
 
 
@@ -9,11 +13,18 @@ class EventViewSet(viewsets.ModelViewSet):
     serializer_class = EventSerializer
     permission_classes = [IsAuthenticated]
 
+    @staticmethod
+    def round_to_nearest_quarter(dt):
+        """Round a datetime to the nearest 15-minute mark."""
+        new_minute = (dt.minute // 15 + (1 if dt.minute %
+                      15 >= 7.5 else 0)) * 15
+        return dt.replace(minute=0, second=0, microsecond=0) + datetime.timedelta(minutes=new_minute)
+
     def get_serializer_context(self):
         """Ensure that the request is added to the serializer context."""
         context = super(EventViewSet, self).get_serializer_context()
         context.update({
-            "request": self.request
+            "user": self.request.user
         })
         return context
 
@@ -34,6 +45,20 @@ class EventViewSet(viewsets.ModelViewSet):
     #             # status='pending'
     #         )
 
+    # @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    # def cancel(self, request, pk=None):
+    #     if pk is None:
+    #         return Response({"error": "No event specified."}, status=status.HTTP_400_BAD_REQUEST)
+
+    #     event = self.get_object()
+    #     event.cancel_event()
+    #     Notification.objects.create(
+    #         recipient=event.requesitioner,  # Assuming requester has a user associated
+    #         message=f"{event.event_name} has been cancelled",
+    #         event=event
+    #     )
+    #     return Response({"status": "Event canceled"}, status=status.HTTP_200_OK)
+
     def get_queryset(self):
         queryset = self.queryset
         event_name = self.request.query_params.get("event_name")
@@ -41,6 +66,7 @@ class EventViewSet(viewsets.ModelViewSet):
         equipment_id = self.request.query_params.get("id")
         start_date = self.request.query_params.get("start_date")
         end_date = self.request.query_params.get("end_date")
+        slip_number = self.request.query_params.get("slip_number")
 
         if start_date:
             queryset = queryset.filter(start_time__date=start_date)
@@ -54,6 +80,8 @@ class EventViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(name__icontains=event_name)
         if requesitioner:
             queryset = queryset.filter(requesitioner=requesitioner)
+        if slip_number:
+            queryset = queryset.filter(slip_number=slip_number)
         if equipment_id:
             queryset = queryset.filter(id=equipment_id)
 

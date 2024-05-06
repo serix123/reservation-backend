@@ -9,3 +9,4 @@ PyJWT
 pylint
 pylint-django
 pylint-plugin-utils
+Pillow

@@ -28,5 +28,5 @@ class ApprovalSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Approval
-        fields = ['id', 'event', 'requesitioner', 'status',
+        fields = ['id', "slip_number", 'event', 'requesitioner', 'status',
                   'immediate_head_approver', 'person_in_charge_approver']

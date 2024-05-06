@@ -4,3 +4,4 @@ from .employee_serializer import EmployeeSerializer, EmployeeDepartmentUpdateSer
 from .equipment_serializer import EquipmentSerializer
 from .event_serializer import EventSerializer
 from .facility_serializer import FacilitySerializer
+from .notification_serializer import NotificationSerializer

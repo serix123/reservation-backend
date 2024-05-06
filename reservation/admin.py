@@ -1,16 +1,22 @@
 from django.contrib import admin
 # from recurrence.forms import RecurrenceField
 from reservation.models import (
+    Approval,
     Department,
     Employee,
     Equipment,
     Event,
     EventEquipment,
     Facility,
-    Approval,
+    Notification,
 )
 
 # Register your models here.
+
+
+class NotificationInline(admin.TabularInline):
+    model = Notification
+    extra = 1
 
 
 class EmployeeAdmin(admin.ModelAdmin):
@@ -40,6 +46,7 @@ class EmployeeAdmin(admin.ModelAdmin):
             },
         ),
     )
+    inlines = (NotificationInline,)
 
     def is_admin(self, obj):
         return obj.is_admin
@@ -90,7 +97,8 @@ class EventEquipmentInline(admin.TabularInline):
 
 
 class EventAdmin(admin.ModelAdmin):
-    list_display = ["id", "event_name", "requesitioner_name",
+    readonly_fields = ("id", "slip_number",)
+    list_display = ["id", "slip_number", "event_name", "requesitioner_name",
                     "start_time", "end_time", "status"]
     list_filter = [
         "event_name",
@@ -100,7 +108,8 @@ class EventAdmin(admin.ModelAdmin):
         "department",
         "start_time",
     ]
-    search_fields = ["event_name", "requesitioner", "department"]
+    search_fields = ["slip_number",  "event_name",
+                     "requesitioner", "department"]
 
     inlines = (EventEquipmentInline,)
 
@@ -118,10 +127,10 @@ class EventAdmin(admin.ModelAdmin):
 
 
 class ApprovalAdmin(admin.ModelAdmin):
-    readonly_fields = ("id",
+    readonly_fields = ("id", "slip_number",
                        'immediate_head_approver',
                        'person_in_charge_approver',)
-    list_display = ["__str__", 'event', 'requesitioner', 'immediate_head_approver', 'person_in_charge_approver',
+    list_display = ["slip_number", "__str__", 'event', 'requesitioner', 'immediate_head_approver', 'person_in_charge_approver',
                     'status', 'get_immediate_head_status', 'get_person_in_charge_status']
     actions = ['make_approved']
 
@@ -147,6 +156,18 @@ class ApprovalAdmin(admin.ModelAdmin):
     make_approved.short_description = "Mark selected as approved"
 
 
+class NotificationAdmin(admin.ModelAdmin):
+    readonly_fields = ("id",)
+
+    list_display = (
+        "id",
+        "__str__",
+        "created_at",
+    )
+    ordering = ["id"]
+
+
+admin.site.register(Notification, NotificationAdmin)
 admin.site.register(Approval, ApprovalAdmin)
 admin.site.register(Event, EventAdmin)
 admin.site.register(Equipment, EquipmentAdmin)

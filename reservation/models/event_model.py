@@ -1,4 +1,5 @@
-from django.db import models
+import uuid
+from django.db import models, transaction
 from reservation.models.employee_model import Employee
 from reservation.models.equipment_model import Equipment
 from reservation.models.facility_model import Facility
@@ -10,9 +11,11 @@ class Event(models.Model):
     requesitioner = models.ForeignKey(
         Employee, on_delete=models.CASCADE, related_name="events"
     )
+    contact_number = models.CharField(max_length=11, blank=True, null=True)
     reserved_facility = models.ForeignKey(
         Facility, on_delete=models.CASCADE, related_name="events"
     )
+    participants_quantity = models.PositiveIntegerField(default=0)
     department = models.ForeignKey(
         "Department",
         on_delete=models.SET_NULL,
@@ -35,8 +38,8 @@ class Event(models.Model):
     )
     status = models.CharField(
         max_length=12, choices=STATUS_TYPE, default='draft')
-
     additional_needs = models.TextField(blank=True, null=True)
+    slip_number = models.CharField(max_length=20, unique=True, blank=True)
 
     # RECURRENCE_CHOICES = (
     #     ('none', 'None'),
@@ -67,16 +70,57 @@ class Event(models.Model):
     def requesitioner_name(self):
         return str(self.requesitioner)
 
-    def approve_event(self):
-        if not self.status == 2:
-            self.status = "confirmed"
+    def cancel_event(self):
+        """Cancels the event and deletes the associated approval."""
+        with transaction.atomic():
+            if hasattr(self, 'approval'):
+                self.approval.delete()  # Delete the associated Approval record
+            self.status = 'cancelled'
             self.save()
+
+    def update_event(self, status):
+        if status == "confirmed":
+            self.status = status
             self.update_equipment_inventory()
+            self.save()
+        elif status == "cancelled":
+            self.delete()
+        else:
+            self.status = status
+            self.save()
 
     def update_equipment_inventory(self):
-        for equipment in self.eventequipment_set.all():
-            equipment.equipment.equipment_quantity -= equipment.quantity
-            equipment.equipment.save()
+        with transaction.atomic():  # Start of transaction
+            for event_equipment in self.eventequipment_set.select_for_update().all():
+                # The select_for_update() call locks the rows until the end of the transaction block
+                equipment = event_equipment.equipment
+                equipment.equipment_quantity -= event_equipment.quantity
+                if equipment.equipment_quantity < 0:
+                    raise ValueError(
+                        "Insufficient equipment quantity to use.")
+                equipment.save()
+
+    def generate_slip_number(self):
+        # Generate a unique slip number, which could be based on the current date/time or other logic
+        # Example using UUID, shortened for simplicity
+        return str(uuid.uuid4())[:8]
+
+    def save(self, *args, **kwargs):
+        if not self.slip_number:
+            # Generate a unique slip number on first save
+            self.slip_number = self.generate_slip_number()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        with transaction.atomic():
+            # Retrieve and update within a transaction
+            event_equipments = self.eventequipment_set.select_for_update().all()
+            for event_equipment in event_equipments:
+                equipment = event_equipment.equipment
+                equipment.quantity_available += event_equipment.quantity
+                equipment.save()
+            # Call the original delete method
+            super().delete(*args, **kwargs)
 
     def __str__(self):
         return f"{self.event_name} ({self.status})"

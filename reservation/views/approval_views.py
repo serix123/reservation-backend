@@ -25,8 +25,8 @@ def get_approver_approvals(request):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def approve_by_immediate_head(request, pk):
-    approval = Approval.objects.get(pk=pk)
+def approve_by_immediate_head(request, slip_number):
+    approval = Approval.objects.get(slip_number=slip_number)
     employee = Employee.objects.get(user=request.user)
     if employee == approval.immediate_head_approver:
         approval.approve_by_immediate_head(employee)
@@ -36,8 +36,8 @@ def approve_by_immediate_head(request, pk):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def revoke_by_immediate_head(request, pk):
-    approval = Approval.objects.get(pk=pk)
+def revoke_by_immediate_head(request, slip_number):
+    approval = Approval.objects.get(slip_number=slip_number)
     employee = Employee.objects.get(user=request.user)
     if employee == approval.immediate_head_approver:
         approval.revoke_by_immediate_head(employee)
@@ -47,8 +47,8 @@ def revoke_by_immediate_head(request, pk):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def reject_by_immediate_head(request, pk):
-    approval = Approval.objects.get(pk=pk)
+def reject_by_immediate_head(request, slip_number):
+    approval = Approval.objects.get(slip_number=slip_number)
     employee = Employee.objects.get(user=request.user)
     if employee == approval.immediate_head_approver:
         approval.reject_by_immediate_head(employee)
@@ -58,8 +58,8 @@ def reject_by_immediate_head(request, pk):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def approve_by_person_in_charge(request, pk):
-    approval = Approval.objects.get(pk=pk)
+def approve_by_person_in_charge(request, slip_number):
+    approval = Approval.objects.get(slip_number=slip_number)
     employee = Employee.objects.get(user=request.user)
     if employee == approval.person_in_charge_approver:
         approval.approve_by_person_in_charge(employee)
@@ -69,8 +69,8 @@ def approve_by_person_in_charge(request, pk):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def revoke_by_person_in_charge(request, pk):
-    approval = Approval.objects.get(pk=pk)
+def revoke_by_person_in_charge(request, slip_number):
+    approval = Approval.objects.get(slip_number=slip_number)
     employee = Employee.objects.get(user=request.user)
     if employee == approval.person_in_charge_approver:
         approval.revoke_by_person_in_charge(employee)
@@ -80,8 +80,8 @@ def revoke_by_person_in_charge(request, pk):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def reject_by_person_in_charge(request, pk):
-    approval = Approval.objects.get(pk=pk)
+def reject_by_person_in_charge(request, slip_number):
+    approval = Approval.objects.get(slip_number=slip_number)
     employee = Employee.objects.get(user=request.user)
     if employee == approval.person_in_charge_approver:
         approval.reject_by_person_in_charge(employee)
@@ -91,8 +91,8 @@ def reject_by_person_in_charge(request, pk):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated, IsAdminUser])
-def approve_by_admin(request, pk):
-    approval = Approval.objects.get(pk=pk)
+def approve_by_admin(request, slip_number):
+    approval = Approval.objects.get(slip_number=slip_number)
     employee = Employee.objects.get(user=request.user)
     if employee.is_admin == True:
         approval.approve_by_admin(employee=employee)
@@ -102,8 +102,8 @@ def approve_by_admin(request, pk):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated, IsAdminUser])
-def revoke_by_admin(request, pk):
-    approval = Approval.objects.get(pk=pk)
+def revoke_by_admin(request, slip_number):
+    approval = Approval.objects.get(slip_number=slip_number)
     employee = Employee.objects.get(user=request.user)
     if employee.is_admin == True:
         approval.revoke_by_admin(employee=employee)
@@ -113,8 +113,8 @@ def revoke_by_admin(request, pk):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated, IsAdminUser])
-def reject_by_admin(request, pk):
-    approval = Approval.objects.get(pk=pk)
+def reject_by_admin(request, slip_number):
+    approval = Approval.objects.get(slip_number=slip_number)
     employee = Employee.objects.get(user=request.user)
     if employee.is_admin == True:
         approval.reject_by_admin(employee=employee)
