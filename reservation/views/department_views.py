@@ -58,7 +58,8 @@ def update_department(request, pk):
         return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
 
     # Note 'partial=True' to allow partial updates
-    serializer = DepartmentSerializer(department, data=request.data, partial=True)
+    serializer = DepartmentSerializer(
+        department, data=request.data, partial=True)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data)
@@ -76,20 +77,21 @@ def update_dept_head(request, pk):
             {"error": "Department not found"}, status=status.HTTP_404_NOT_FOUND
         )
 
-    # Get the current superior before update
-    old_superior = department.superior
+    # Get the current immediate_head before update
+    old_immediate_head = department.immediate_head
 
     serializer = DepartmentSerializer(department, data=request.data)
     if serializer.is_valid():
         with transaction.atomic():
             department = serializer.save()  # Save the updated department
 
-            new_superior = serializer.validated_data.get("superior")
-            # If the superior has changed, update all employees in this department
-            if old_superior != new_superior:
+            new_immediate_head = serializer.validated_data.get(
+                "immediate_head")
+            # If the immediate_head has changed, update all employees in this department
+            if old_immediate_head != new_immediate_head:
                 Employee.objects.filter(
-                    department=department, immediate_head=old_superior
-                ).update(immediate_head=new_superior)
+                    department=department, immediate_head=old_immediate_head
+                ).update(immediate_head=new_immediate_head)
 
             return Response(serializer.data, status=status.HTTP_200_OK)
     else:

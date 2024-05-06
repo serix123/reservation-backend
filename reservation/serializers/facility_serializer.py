@@ -1,9 +1,12 @@
 from rest_framework import serializers
 from reservation.models import Employee, Department, Facility
+from reservation.serializers import EventSerializer
 
 
-class FacilitySerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(read_only=True)  # Make the ID field read-only
+class    FacilitySerializer(serializers.ModelSerializer):
+    events = EventSerializer(many=True, read_only=True)
+    # Make the ID field read-only
+    id = serializers.IntegerField(read_only=True)
     person_in_charge = serializers.PrimaryKeyRelatedField(
         queryset=Employee.objects.all(),
         required=False,  # Not required for updates
@@ -12,7 +15,7 @@ class FacilitySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Facility
-        fields = ["id", "name", "department", "person_in_charge"]
+        fields = ["id", "name", "department", "person_in_charge", "events"]
 
     def validate_id(self, value):
         """
@@ -27,7 +30,8 @@ class FacilitySerializer(serializers.ModelSerializer):
             # Fetch the first department to use as a default
             default_department = Department.objects.first()
             if not default_department:
-                raise serializers.ValidationError("No default department available.")
+                raise serializers.ValidationError(
+                    "No default department available.")
             validated_data["department"] = default_department
         if "person_in_charge" not in validated_data:
             # Fetch the first department to use as a default

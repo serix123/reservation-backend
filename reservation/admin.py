@@ -1,8 +1,22 @@
 from django.contrib import admin
-from recurrence.forms import RecurrenceField
-from reservation.models import Department, Employee, Equipment, Event, Facility
+# from recurrence.forms import RecurrenceField
+from reservation.models import (
+    Approval,
+    Department,
+    Employee,
+    Equipment,
+    Event,
+    EventEquipment,
+    Facility,
+    Notification,
+)
 
 # Register your models here.
+
+
+class NotificationInline(admin.TabularInline):
+    model = Notification
+    extra = 1
 
 
 class EmployeeAdmin(admin.ModelAdmin):
@@ -32,6 +46,7 @@ class EmployeeAdmin(admin.ModelAdmin):
             },
         ),
     )
+    inlines = (NotificationInline,)
 
     def is_admin(self, obj):
         return obj.is_admin
@@ -49,7 +64,7 @@ class DepartmentAdmin(admin.ModelAdmin):
     readonly_fields = ("id",)
     list_display = (
         "name",
-        "superior",
+        "immediate_head",
     )
 
 
@@ -76,22 +91,84 @@ class EquipmentAdmin(admin.ModelAdmin):
     ordering = ["equipment_name"]
 
 
+class EventEquipmentInline(admin.TabularInline):
+    model = EventEquipment
+    extra = 1
+
+
 class EventAdmin(admin.ModelAdmin):
-    list_display = ["event_name", "organizer_name", "start_time", "end_time", "status"]
+    readonly_fields = ("id", "slip_number",)
+    list_display = ["id", "slip_number", "event_name", "requesitioner_name",
+                    "start_time", "end_time", "status"]
     list_filter = [
         "event_name",
-        "organizer_name",
+        "requesitioner",
         "status",
         "reserved_facility",
         "department",
         "start_time",
     ]
-    search_fields = ["organizer_name", "department"]
-    formfield_overrides = {
-        RecurrenceField: {"widget": RecurrenceField.widget},
-    }
+    search_fields = ["slip_number",  "event_name",
+                     "requesitioner", "department"]
+
+    inlines = (EventEquipmentInline,)
+
+    def save_model(self, request, obj, form, change):
+        if 'status' in form.changed_data and obj.status == 'application':
+            super().save_model(request, obj, form, change)
+            if not hasattr(obj, 'approval'):
+                Approval.objects.create(
+                    event=obj, requesitioner=obj.requesitioner)
+        else:
+            super().save_model(request, obj, form, change)
+    # formfield_overrides = {
+    #     RecurrenceField: {"widget": RecurrenceField.widget},
+    # }
 
 
+class ApprovalAdmin(admin.ModelAdmin):
+    readonly_fields = ("id", "slip_number",
+                       'immediate_head_approver',
+                       'person_in_charge_approver',)
+    list_display = ["slip_number", "__str__", 'event', 'requesitioner', 'immediate_head_approver', 'person_in_charge_approver',
+                    'status', 'get_immediate_head_status', 'get_person_in_charge_status']
+    actions = ['make_approved']
+
+    def get_immediate_head_status(self, obj):
+        return obj.immediate_head_approval
+    get_immediate_head_status.short_description = 'Immediate Head Status'
+
+    def get_person_in_charge_status(self, obj):
+        return obj.person_in_charge_approval
+    get_person_in_charge_status.short_description = 'Person in Charge Status'
+
+    def get_admin_status(self, obj):
+        return obj.admin_approval
+    get_admin_status.short_description = 'Admin Status'
+
+    def make_approved(self, request, queryset):
+        for approval in queryset:
+            approval.immediate_head_approved = 1
+            approval.person_in_charge_approved = 1
+            approval.admin_approved = 1
+            approval.check_if_approved()
+            approval.save()
+    make_approved.short_description = "Mark selected as approved"
+
+
+class NotificationAdmin(admin.ModelAdmin):
+    readonly_fields = ("id",)
+
+    list_display = (
+        "id",
+        "__str__",
+        "created_at",
+    )
+    ordering = ["id"]
+
+
+admin.site.register(Notification, NotificationAdmin)
+admin.site.register(Approval, ApprovalAdmin)
 admin.site.register(Event, EventAdmin)
 admin.site.register(Equipment, EquipmentAdmin)
 admin.site.register(Facility, FacilityAdmin)

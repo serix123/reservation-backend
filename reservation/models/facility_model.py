@@ -1,7 +1,7 @@
 from django.db import models
 
-
-from reservation.models import Department, Employee
+from reservation.models.department_model import Department
+from reservation.models.employee_model import Employee
 
 
 def get_default_department_id():
@@ -42,6 +42,9 @@ class Facility(models.Model):
         related_name="managed_facilities",
         default=get_default_person_in_charge,
     )
+    facility_description = models.TextField(blank=True, null=True)
+    image = models.ImageField(
+        upload_to='facilities_images/', blank=True, null=True)  # Optional image field
 
     def __str__(self):
         return self.name

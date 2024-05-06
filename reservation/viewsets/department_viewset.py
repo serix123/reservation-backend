@@ -9,7 +9,7 @@ class DepartmentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Department.objects.all()
-        superior_id = self.request.query_params.get('superior')
-        if superior_id is not None:
-            queryset = queryset.filter(superior_id=superior_id)
+        immediate_head_id = self.request.query_params.get('immediate_head')
+        if immediate_head_id is not None:
+            queryset = queryset.filter(immediate_head_id=immediate_head_id)
         return queryset

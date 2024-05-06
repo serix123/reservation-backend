@@ -32,6 +32,13 @@ def get(request, pk):
     serializer = EmployeeSerializer(employee)
     return Response(serializer.data)
 
+@api_view(["GET"])
+def get(request, pk):
+    # Try to get the employee or return 404 if not found
+    employee = get_object_or_404(Employee, pk=pk)
+    serializer = EmployeeSerializer(employee)
+    return Response(serializer.data)
+
 
 @api_view(["PATCH"])
 # Add appropriate permissions as needed
@@ -64,7 +71,7 @@ def update_employees_department(request):
         # Update the department for all specified employees
         Employee.objects.filter(id__in=employee_ids).update(department=department)
         Employee.objects.filter(id__in=employee_ids).update(
-            immediate_head=department.superior
+            immediate_head=department.immediate_head
         )
 
         return Response(

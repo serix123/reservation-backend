@@ -16,7 +16,9 @@ class Equipment(models.Model):
         (2, "Dedicated"),
         (3, "Overtime"),
     )
-    work_type = models.IntegerField(choices=WORK_CHOICES, null=True)
+    work_type = models.IntegerField(
+        choices=WORK_CHOICES, blank=True, null=True)
+    
 
     def __str__(self):
         return f"{self.equipment_name} ({self.equipment_type})"
