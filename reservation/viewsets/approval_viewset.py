@@ -42,7 +42,7 @@ class ApprovalViewSet(viewsets.ModelViewSet):
                 slip_number=slip_number)
             return queryset
 
-        user = self.request.user
-        employee = Employee.objects.get(user=user)
-        queryset = queryset.filter(requesitioner=employee)
+        # user = self.request.user
+        # employee = Employee.objects.get(user=user)
+        # queryset = queryset.filter(requesitioner=employee)
         return queryset

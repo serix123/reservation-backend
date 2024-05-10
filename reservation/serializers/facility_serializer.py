@@ -1,9 +1,9 @@
 from rest_framework import serializers
 from reservation.models import Employee, Department, Facility
-from reservation.serializers import EventSerializer
+from reservation.serializers.event_serializer import EventSerializer
 
 
-class    FacilitySerializer(serializers.ModelSerializer):
+class FacilitySerializer(serializers.ModelSerializer):
     events = EventSerializer(many=True, read_only=True)
     # Make the ID field read-only
     id = serializers.IntegerField(read_only=True)
@@ -15,7 +15,12 @@ class    FacilitySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Facility
-        fields = ["id", "name", "department", "person_in_charge", "events"]
+        fields = ["id", "name", "department", "person_in_charge", "events", 'image']
+
+    def validate_image(self, value):
+        if not value.name.endswith(('.jpg', '.jpeg', '.png')):
+            raise serializers.ValidationError("Unsupported file format. Only JPG, JPEG, PNG, and PDF are allowed.")
+        return value
 
     def validate_id(self, value):
         """

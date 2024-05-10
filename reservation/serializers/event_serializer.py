@@ -7,75 +7,89 @@ from reservation.models import Approval, Employee, Event, EventEquipment, Notifi
 
 
 class EventEquipmentSerializer(serializers.ModelSerializer):
-    equipment_name = serializers.ReadOnlyField(
-        source='equipment.equipment_name')
+    equipment_name = serializers.ReadOnlyField(source="equipment.equipment_name")
 
     class Meta:
         model = EventEquipment
-        fields = ['equipment', 'equipment_name', 'quantity']
+        fields = ["equipment", "equipment_name", "quantity"]
 
 
 class EventSerializer(serializers.ModelSerializer):
 
     equipments = EventEquipmentSerializer(
-        source='eventequipment_set', many=True, required=False)
+        source="eventequipment_set", many=True, required=False
+    )
 
     class Meta:
         model = Event
-        fields = ['id',
-                  #   'requesitioner',
-                  "slip_number",
-                  'equipments',
-                  'event_name', 'reserved_facility',
-                  'start_time', 'end_time',
-                  'status']
+        fields = [
+            #   'requesitioner',
+            "id",
+            "slip_number",
+            "event_name",
+            "event_description",
+            "contact_number",
+            "additional_needs",
+            "reserved_facility",
+            "participants_quantity",
+            "start_time",
+            "end_time",
+            "equipments",
+            "status",
+            "event_file",
+        ]
         extra_kwargs = {
-            'event_name': {'required': False, 'allow_null': True},
-            'reserved_facility': {'required': False, 'allow_null': True},
-            'start_time': {'required': False, 'allow_null': True},
-            'end_time': {'required': False, 'allow_null': True},
-            'equipments': {'required': False, 'allow_null': True},
+            "event_name": {"required": False, "allow_null": True},
+            "reserved_facility": {"required": False, "allow_null": True},
+            "start_time": {"required": False, "allow_null": True},
+            "end_time": {"required": False, "allow_null": True},
+            "equipments": {"required": False, "allow_null": True},
         }
+    def validate_event_file(self, value):
+        if value is not None and not value.name.endswith(('.jpg', '.jpeg', '.png', '.pdf')):
+            raise serializers.ValidationError("Unsupported file format. Only JPG, JPEG, PNG, and PDF are allowed.")
+        return value
 
     def validate(self, data):
-        if 'start_time' in data and 'end_time' in data:
-            if data['start_time'] > data['end_time']:
-                raise serializers.ValidationError(
-                    "End time must be after start time.")
+        if "start_time" in data and "end_time" in data:
+            if data["start_time"] > data["end_time"]:
+                raise serializers.ValidationError("End time must be after start time.")
             # if data['start_time'] == data['end_time']:
             #     raise serializers.ValidationError(
             #         "Start time and end time cannot be the same.")
         # Check for existing events with 'confirmed' status and the same facility
-        if 'reserved_facility' in data and 'status' in data and data['status'] == 'confirmed':
-            reserved_facility = data['reserved_facility']
+        if (
+            "reserved_facility" in data
+            and "status" in data
+            and data["status"] == "application"
+        ):
+            reserved_facility = data["reserved_facility"]
             overlapping_events = Event.objects.filter(
                 reserved_facility=reserved_facility,
-                status='confirmed',
-                start_time__lt=data['end_time'],
-                end_time__gt=data['start_time']
+                status="confirmed",
+                start_time__lt=data["end_time"],
+                end_time__gt=data["start_time"],
             )
             if overlapping_events.exists():
                 raise serializers.ValidationError(
-                    "There is already a confirmed event at the same facility during the given time.")
-
+                    "There is already a confirmed event at the same facility during the given time."
+                )
         return data
 
     def create(self, validated_data):
         try:
             with transaction.atomic():
                 # Access the user from the serializer's context (if it's an update operation)
-                user = self.context['request'].user
+                user = self.context["request"].user
                 employee = Employee.objects.get(user=user)
-                equipments_data = validated_data.pop('eventequipment_set', [])
-                event = Event.objects.create(
-                    requesitioner=employee, **validated_data)
-                print(f'{validated_data}')
+                equipments_data = validated_data.pop("eventequipment_set", [])
+                event = Event.objects.create(requesitioner=employee, **validated_data)
+                print(f"{validated_data}")
 
                 for equipment_data in equipments_data:
-                    EventEquipment.objects.create(
-                        event=event, **equipment_data)
+                    EventEquipment.objects.create(event=event, **equipment_data)
 
-                status = validated_data.pop('status', {})
+                status = validated_data.pop("status", {})
                 if status == "application":
 
                     person_in_charge_status = 0
@@ -101,38 +115,41 @@ class EventSerializer(serializers.ModelSerializer):
                     Notification.objects.create(
                         recipient=employee,  # Assuming requester has a user associated
                         message=message,
-                        event=event
+                        event=event,
                     )
             return event
         except Exception as e:
             # Handle specific error, e.g., insufficient equipment quantity
-            raise ValidationError({'error': str(e)})
+            raise ValidationError({"error": str(e)})
 
     def update(self, instance, validated_data):
         try:
             with transaction.atomic():
                 instance.event_name = validated_data.get(
-                    'event_name', instance.event_name)
+                    "event_name", instance.event_name
+                )
                 instance.start_time = validated_data.get(
-                    'start_time', instance.start_time)
-                instance.end_time = validated_data.get(
-                    'end_time', instance.end_time)
+                    "start_time", instance.start_time
+                )
+                instance.end_time = validated_data.get("end_time", instance.end_time)
                 # Handle the equipment data:
-                equipments_data = validated_data.pop('eventequipment_set', [])
+                equipments_data = validated_data.pop("eventequipment_set", [])
                 for equipment_data in equipments_data:
-                    eq_id = equipment_data.get('equipment').id
+                    eq_id = equipment_data.get("equipment").id
                     event_eq = EventEquipment.objects.get(
-                        event=instance, equipment_id=eq_id)
+                        event=instance, equipment_id=eq_id
+                    )
                     event_eq.quantity = equipment_data.get(
-                        'quantity', event_eq.quantity)
+                        "quantity", event_eq.quantity
+                    )
                     event_eq.save()
 
-                status = validated_data.get('status')
-                if instance.status != 'application' and status == 'application':
+                status = validated_data.get("status")
+                if instance.status != "application" and status == "application":
                     instance.status = status
                     instance.save()
                     # Create approval after the status update
-                    user = self.context.get('user', None)
+                    user = self.context.get("user", None)
                     message = "An Approval request has been made"
 
                     person_in_charge_status = 0
@@ -157,14 +174,15 @@ class EventSerializer(serializers.ModelSerializer):
                         Notification.objects.create(
                             recipient=employee,  # Assuming requester has a user associated
                             message=message,
-                            event=instance
+                            event=instance,
                         )
                 else:
                     instance.save()
                 return instance
         except Exception as e:
             # Handle specific error, e.g., insufficient equipment quantity
-            raise ValidationError({'error': str(e)})
+            raise ValidationError({"error": str(e)})
+
     # recurrence = recurrence.serializers.RecurrenceField()
 
     # def get_approval_status(self, obj):

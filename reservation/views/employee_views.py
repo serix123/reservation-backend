@@ -18,6 +18,7 @@ from reservation.serializers import (
 #     serializer = EmployeeSerializer(employee, many=True)
 #     return Response(serializer.data, status=status.HTTP_200_OK)
 
+
 @api_view(["GET"])
 def get_all(request):
     employee = get_list_or_404(Employee)
@@ -32,10 +33,21 @@ def get(request, pk):
     serializer = EmployeeSerializer(employee)
     return Response(serializer.data)
 
+
 @api_view(["GET"])
-def get(request, pk):
+@permission_classes([IsAuthenticated])
+def get_profile(request):
+    user = request.user
     # Try to get the employee or return 404 if not found
-    employee = get_object_or_404(Employee, pk=pk)
+    employee = get_object_or_404(
+        Employee.objects.prefetch_related(
+            "approvals",
+            "immediate_head_approvals",
+            "person_in_charge_approvals",
+            "managed_facilities",
+        ),
+        user=user,
+    )
     serializer = EmployeeSerializer(employee)
     return Response(serializer.data)
 
