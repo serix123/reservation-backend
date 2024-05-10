@@ -10,4 +10,5 @@ from .approval_views import (approve_by_immediate_head,
                              reject_by_admin,
                              get_all)
 from .notification_views import get_user_notification
-from .event_views import cancel_event, update_event, partial_update_event
+from .event_views import cancel_event, update_event, partial_update_event,user_event
+from .equipment_views import get_all_equipments

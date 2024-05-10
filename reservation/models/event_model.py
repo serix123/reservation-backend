@@ -40,7 +40,12 @@ class Event(models.Model):
         max_length=12, choices=STATUS_TYPE, default='draft')
     additional_needs = models.TextField(blank=True, null=True)
     slip_number = models.CharField(max_length=20, unique=True, blank=True)
-
+    event_file = models.FileField(
+        upload_to="event_files/",
+        blank=True,
+        null=True,
+        help_text="Upload a PDF or JPEG file.",
+    )
     # RECURRENCE_CHOICES = (
     #     ('none', 'None'),
     #     ('daily', 'Daily'),

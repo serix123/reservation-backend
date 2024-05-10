@@ -28,6 +28,17 @@ def cancel_event(request, slip_number):
         return Response({"error": "No event specified."}, status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(['GET'])
+def user_event(request):
+    """
+    Fully update an event identified by slip_number.
+    """
+    user = request.user
+    employee =Employee.objects.get(user=user)
+    event = Event.objects.filter(requesitioner=employee)
+    serializer = EventSerializer(event, many=True)
+    return Response(serializer.data)
+
 @api_view(['PUT'])
 def update_event(request, slip_number):
     """

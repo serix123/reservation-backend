@@ -26,7 +26,28 @@ class ApprovalSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Invalid status for approval.")
         return value
 
+    event_details = serializers.SerializerMethodField()
+    def get_event_details(self, obj):
+        if obj.event:
+            return {
+                "id": obj.event.id,
+                "event_name": obj.event.event_name,
+                "event_description": obj.event.event_description,
+                # "requesitioner": obj.event.requesitioner,
+                "contact_number": obj.event.contact_number,
+                # "reserved_facility": obj.event.reserved_facility,
+                "participants_quantity": obj.event.participants_quantity,
+                "department": obj.event.department,
+                "start_time": obj.event.start_time,
+                "end_time": obj.event.end_time,
+                # "equipments": obj.event.equipments,
+                "status": obj.event.status,
+                "additional_needs": obj.event.additional_needs,
+                "slip_number": obj.event.slip_number,
+            }
+        return None
+
     class Meta:
         model = Approval
-        fields = ['id', "slip_number", 'event', 'requesitioner', 'status',
-                  'immediate_head_approver', 'person_in_charge_approver']
+        fields = ['id', "slip_number", 'event','event_details', 'requesitioner', 'status',
+                  'immediate_head_approver', 'person_in_charge_approver','immediate_head_status','person_in_charge_status','admin_status']
