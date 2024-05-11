@@ -44,10 +44,16 @@ class EventSerializer(serializers.ModelSerializer):
             "start_time": {"required": False, "allow_null": True},
             "end_time": {"required": False, "allow_null": True},
             "equipments": {"required": False, "allow_null": True},
+            "slip_number": {"required": False, "allow_null": True},
         }
+
     def validate_event_file(self, value):
-        if value is not None and not value.name.endswith(('.jpg', '.jpeg', '.png', '.pdf')):
-            raise serializers.ValidationError("Unsupported file format. Only JPG, JPEG, PNG, and PDF are allowed.")
+        if value is not None and not value.name.endswith(
+            (".jpg", ".jpeg", ".png", ".pdf")
+        ):
+            raise serializers.ValidationError(
+                "Unsupported file format. Only JPG, JPEG, PNG, and PDF are allowed."
+            )
         return value
 
     def validate(self, data):
@@ -84,7 +90,6 @@ class EventSerializer(serializers.ModelSerializer):
                 employee = Employee.objects.get(user=user)
                 equipments_data = validated_data.pop("eventequipment_set", [])
                 event = Event.objects.create(requesitioner=employee, **validated_data)
-                print(f"{validated_data}")
 
                 for equipment_data in equipments_data:
                     EventEquipment.objects.create(event=event, **equipment_data)
@@ -133,12 +138,22 @@ class EventSerializer(serializers.ModelSerializer):
                 )
                 instance.end_time = validated_data.get("end_time", instance.end_time)
                 # Handle the equipment data:
+                instance.eventequipment_set.all().delete()
+                # for event_equipment in event_equipments:
+                #     equipment = event_equipment.equipment
+                #     equipment.quantity_available += event_equipment.quantity
+                #     equipment.save()
                 equipments_data = validated_data.pop("eventequipment_set", [])
                 for equipment_data in equipments_data:
                     eq_id = equipment_data.get("equipment").id
-                    event_eq = EventEquipment.objects.get(
-                        event=instance, equipment_id=eq_id
-                    )
+                    try:
+                        event_eq = EventEquipment.objects.get(
+                            event=instance, equipment_id=eq_id
+                        )
+                    except EventEquipment.DoesNotExist:
+                        event_eq = EventEquipment.objects.create(
+                            event=instance, **equipment_data
+                        )
                     event_eq.quantity = equipment_data.get(
                         "quantity", event_eq.quantity
                     )
@@ -150,7 +165,7 @@ class EventSerializer(serializers.ModelSerializer):
                     instance.save()
                     # Create approval after the status update
                     user = self.context.get("user", None)
-                    message = "An Approval request has been made"
+                    employee = Employee.objects.get(user=user)
 
                     person_in_charge_status = 0
                     admin_status = 0
@@ -161,7 +176,7 @@ class EventSerializer(serializers.ModelSerializer):
                         admin_status = 1
 
                     if user is not None:
-                        employee = Employee.objects.get(user=user)
+                        message = "An Approval request has been made"
                         Approval.objects.create(
                             event=instance,
                             requesitioner=employee,
@@ -176,6 +191,21 @@ class EventSerializer(serializers.ModelSerializer):
                             message=message,
                             event=instance,
                         )
+                elif instance.status == "application" and status == "draft":
+                    instance.status = status
+                    instance.save()
+                    slip_number = validated_data.get("slip_number")
+                    approval = Approval.objects.get(
+                        slip_number=slip_number,
+                        event=instance,
+                    )
+                    approval.delete()
+                    message = "An Approval request has been deleted"
+                    Notification.objects.create(
+                        recipient=employee,  # Assuming requester has a user associated
+                        message=message,
+                        event=instance,
+                    )
                 else:
                     instance.save()
                 return instance
