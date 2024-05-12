@@ -119,7 +119,7 @@ class Approval(models.Model):
                 self.status_update_date = timezone.now()
                 self.event.update_event('returned')
                 self.create_notification("Event has been Returned.")
-                self.save()
+                # self.save()
                 # Delete Approval below
                 self.delete()
             else:
