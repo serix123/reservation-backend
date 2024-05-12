@@ -16,11 +16,12 @@ class ApprovalViewSet(viewsets.ModelViewSet):
         """
         queryset = self.queryset
         immediate_head_approver = self.request.query_params.get(
-            "immediate_head_approver")
+            "immediate_head_approver"
+        )
         person_in_charge_approver = self.request.query_params.get(
-            "person_in_charge_approver")
-        slip_number = self.request.query_params.get(
-            "slip_number")
+            "person_in_charge_approver"
+        )
+        slip_number = self.request.query_params.get("slip_number")
 
         # requesitioner = self.request.query_params.get("requesitioner")
         # if requesitioner:
@@ -28,21 +29,20 @@ class ApprovalViewSet(viewsets.ModelViewSet):
         #         requesitioner=requesitioner)
 
         if immediate_head_approver is not None:
-            queryset = queryset.filter(
-                immediate_head_approver=immediate_head_approver)
+            queryset = queryset.filter(immediate_head_approver=immediate_head_approver)
             return queryset
 
         if person_in_charge_approver is not None:
             queryset = queryset.filter(
-                person_in_charge_approver=person_in_charge_approver)
+                person_in_charge_approver=person_in_charge_approver
+            )
             return queryset
 
         if slip_number is not None:
-            queryset = queryset.filter(
-                slip_number=slip_number)
+            queryset = queryset.filter(slip_number=slip_number)
             return queryset
+        return queryset
 
         # user = self.request.user
         # employee = Employee.objects.get(user=user)
         # queryset = queryset.filter(requesitioner=employee)
-        return queryset

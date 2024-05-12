@@ -61,36 +61,6 @@ class EventViewSet(viewsets.ModelViewSet):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # def perform_create(self, serializer):
-    #     user = self.request.user
-    #     employee = Employee.objects.get(user=user)
-
-    #     # This will save the Event instance
-    #     instance = serializer.save(requesitioner=employee)
-
-    #     # Automatically create an Approval instance when a new Event is created
-    #     if instance.status == "application":
-    #         Approval.objects.create(
-    #             event=instance,
-    #             # requesitioner=instance.requesitioner,
-    #             requesitioner=employee,
-    #             # Default status
-    #             # status='pending'
-    #         )
-
-    # @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
-    # def cancel(self, request, pk=None):
-    #     if pk is None:
-    #         return Response({"error": "No event specified."}, status=status.HTTP_400_BAD_REQUEST)
-
-    #     event = self.get_object()
-    #     event.cancel_event()
-    #     Notification.objects.create(
-    #         recipient=event.requesitioner,  # Assuming requester has a user associated
-    #         message=f"{event.event_name} has been cancelled",
-    #         event=event
-    #     )
-    #     return Response({"status": "Event canceled"}, status=status.HTTP_200_OK)
 
     def get_queryset(self):
         queryset = self.queryset

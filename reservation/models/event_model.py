@@ -27,8 +27,7 @@ class Event(models.Model):
     end_time = models.DateTimeField()
     # equipment = models.ManyToManyField(
     #     Equipment, blank=True, related_name="events")
-    equipments = models.ManyToManyField(
-        Equipment, through='EventEquipment', blank=True)
+    equipments = models.ManyToManyField(Equipment, through="EventEquipment", blank=True)
     STATUS_TYPE = (
         ("application", "Application"),
         ("confirmed", "Confirmed"),
@@ -36,8 +35,7 @@ class Event(models.Model):
         ("returned", "Returned"),
         ("draft", "Draft"),
     )
-    status = models.CharField(
-        max_length=12, choices=STATUS_TYPE, default='draft')
+    status = models.CharField(max_length=12, choices=STATUS_TYPE, default="draft")
     additional_needs = models.TextField(blank=True, null=True)
     slip_number = models.CharField(max_length=20, unique=True, blank=True)
     event_file = models.FileField(
@@ -78,9 +76,15 @@ class Event(models.Model):
     def cancel_event(self):
         """Cancels the event and deletes the associated approval."""
         with transaction.atomic():
-            if hasattr(self, 'approval'):
+            if hasattr(self, "approval"):
                 self.approval.delete()  # Delete the associated Approval record
-            self.status = 'cancelled'
+            if self.status == "confirmed":
+                event_equipments = self.eventequipment_set.select_for_update().all()
+                for event_equipment in event_equipments:
+                    equipment = event_equipment.equipment
+                    equipment.quantity_available += event_equipment.quantity
+                    equipment.save()
+            self.status = "cancelled"
             self.save()
 
     def update_event(self, status):
@@ -101,8 +105,7 @@ class Event(models.Model):
                 equipment = event_equipment.equipment
                 equipment.equipment_quantity -= event_equipment.quantity
                 if equipment.equipment_quantity < 0:
-                    raise ValueError(
-                        "Insufficient equipment quantity to use.")
+                    raise ValueError("Insufficient equipment quantity to use.")
                 equipment.save()
 
     def generate_slip_number(self):
@@ -124,6 +127,9 @@ class Event(models.Model):
                 equipment = event_equipment.equipment
                 equipment.quantity_available += event_equipment.quantity
                 equipment.save()
+            self.eventequipment_set.all().delete()
+            if hasattr(self, "approval"):
+                self.approval.delete()  # Delete the associated Approval record
             # Call the original delete method
             super().delete(*args, **kwargs)
 
