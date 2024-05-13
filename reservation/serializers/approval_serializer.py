@@ -20,6 +20,7 @@ class ApprovalSerializer(serializers.ModelSerializer):
     )
     # immediate_head_approver = serializers.ReadOnlyField()
     # person_in_charge_approver = serializers.ReadOnlyField()
+    # admin_approver = serializers.PrimaryKeyRelatedField(read_only=True)
 
     def validate_status(self, value):
         if value not in (-1, 0, 1):
@@ -48,7 +49,39 @@ class ApprovalSerializer(serializers.ModelSerializer):
             }
         return None
 
+    # def to_representation(self, instance):
+    #     # Call the parent class's to_representation method
+    #     data = super().to_representation(instance)
+
+    #     # Check if the request method is GET
+    #     if self.context["request"].method == "GET":
+    #         # Include admin_approver in the response
+    #         data["admin_approver"] = (
+    #             instance.admin_approver.id if instance.admin_approver else None
+    #         )
+
+    #     return data
+
     class Meta:
         model = Approval
-        fields = ['id', "slip_number", 'event', 'event_details', 'requesitioner', 'status', 'status_update_date',
-                  'immediate_head_approver', 'person_in_charge_approver', 'admin_approver', 'immediate_head_status', 'person_in_charge_status', 'admin_status', 'immediate_head_update_date', 'person_in_charge_update_date', 'admin_update_date']
+        fields = [
+            "id",
+            "slip_number",
+            "event",
+            "event_details",
+            "requesitioner",
+            "status",
+            "status_update_date",
+            "immediate_head_approver",
+            "person_in_charge_approver",
+            "admin_approver",
+            "immediate_head_status",
+            "person_in_charge_status",
+            "admin_status",
+            "immediate_head_update_date",
+            "person_in_charge_update_date",
+            "admin_update_date",
+        ]
+        extra_kwargs = {
+            "admin_approver": {"required": False, "allow_null": True},
+        }
