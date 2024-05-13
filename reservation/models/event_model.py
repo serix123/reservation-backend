@@ -100,13 +100,18 @@ class Event(models.Model):
 
     def update_equipment_inventory(self):
         with transaction.atomic():  # Start of transaction
-            for event_equipment in self.eventequipment_set.select_for_update().all():
-                # The select_for_update() call locks the rows until the end of the transaction block
+            for event_equipment in self.eventequipment_set.select_related(
+                "equipment"
+            ).select_for_update():
+                # The select_related() call ensures that the related Equipment objects are also selected
                 equipment = event_equipment.equipment
-                equipment.equipment_quantity -= event_equipment.quantity
-                if equipment.equipment_quantity < 0:
+                new_quantity = equipment.equipment_quantity - event_equipment.quantity
+                if new_quantity < 0:
                     raise ValueError("Insufficient equipment quantity to use.")
-                equipment.save()
+                equipment.equipment_quantity = new_quantity
+                equipment.save(
+                    update_fields=["equipment_quantity"]
+                )  # Update only the quantity field
 
     def generate_slip_number(self):
         # Generate a unique slip number, which could be based on the current date/time or other logic

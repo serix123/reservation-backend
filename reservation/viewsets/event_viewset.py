@@ -61,9 +61,8 @@ class EventViewSet(viewsets.ModelViewSet):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
     def get_queryset(self):
-        queryset = self.queryset
+        queryset = Event.objects.all()
         #     event_name = self.request.query_params.get("event_name")
         #     requesitioner = self.request.query_params.get("requesitioner")
         #     equipment_id = self.request.query_params.get("id")

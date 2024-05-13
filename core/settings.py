@@ -30,9 +30,9 @@ DEBUG = True
 ALLOWED_HOSTS = ["*"]
 
 # Base directory for media files
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 # URL to access media files
-MEDIA_URL = '/media/'
+MEDIA_URL = "/media/"
 
 # Application definition
 
@@ -75,7 +75,7 @@ ROOT_URLCONF = "core.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR, "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
