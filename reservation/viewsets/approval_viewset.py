@@ -14,7 +14,7 @@ class ApprovalViewSet(viewsets.ModelViewSet):
         This view should return a list of all the approvals
         for the currently authenticated user if they are a immediate_head_approver.
         """
-        queryset = self.queryset
+        queryset = Approval.objects.all()
         immediate_head_approver = self.request.query_params.get(
             "immediate_head_approver"
         )
