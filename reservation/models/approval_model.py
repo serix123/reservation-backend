@@ -19,13 +19,13 @@ class Approval(models.Model):
     person_in_charge_approver = models.ForeignKey(
         Employee, related_name="person_in_charge_approvals", on_delete=models.CASCADE
     )
-    admin_approver = models.ForeignKey(
-        Employee,
-        related_name="admin_approvals",
-        on_delete=models.CASCADE,
-        blank=True,
-        null=True,
-    )
+    # admin_approver = models.ForeignKey(
+    #     Employee,
+    #     related_name="admin_approvals",
+    #     on_delete=models.CASCADE,
+    #     blank=True,
+    #     null=True,
+    # )
     status = models.CharField(
         max_length=10,
         choices=[
@@ -109,7 +109,7 @@ class Approval(models.Model):
 
     def approve_by_admin(self, employee):
         if employee.is_admin == True:
-            self.admin_approver = employee
+            # self.admin_approver = employee
             self.admin_status = 1
             self.admin_update_date = timezone.now()
             self.create_notification(
@@ -119,7 +119,7 @@ class Approval(models.Model):
 
     def revoke_by_admin(self, employee):
         if employee.is_admin == True:
-            self.admin_approver = employee
+            # self.admin_approver = employee
             self.admin_status = 0
             self.admin_update_date = timezone.now()
             self.create_notification(
@@ -129,7 +129,7 @@ class Approval(models.Model):
 
     def reject_by_admin(self, employee):
         if employee.is_admin == True:
-            self.admin_approver = employee
+            # self.admin_approver = employee
             self.admin_status = -1
             self.admin_update_date = timezone.now()
             self.create_notification(

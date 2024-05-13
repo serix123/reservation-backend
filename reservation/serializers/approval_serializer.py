@@ -74,7 +74,7 @@ class ApprovalSerializer(serializers.ModelSerializer):
             "status_update_date",
             "immediate_head_approver",
             "person_in_charge_approver",
-            "admin_approver",
+            # "admin_approver",
             "immediate_head_status",
             "person_in_charge_status",
             "admin_status",
@@ -83,5 +83,5 @@ class ApprovalSerializer(serializers.ModelSerializer):
             "admin_update_date",
         ]
         extra_kwargs = {
-            "admin_approver": {"required": False, "allow_null": True},
+            # "admin_approver": {"required": False, "allow_null": True},
         }
