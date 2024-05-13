@@ -82,7 +82,7 @@ class Event(models.Model):
                 event_equipments = self.eventequipment_set.select_for_update().all()
                 for event_equipment in event_equipments:
                     equipment = event_equipment.equipment
-                    equipment.quantity_available += event_equipment.quantity
+                    equipment.equipment_quantity += event_equipment.quantity
                     equipment.save()
             self.status = "cancelled"
             self.save()
@@ -125,7 +125,7 @@ class Event(models.Model):
             event_equipments = self.eventequipment_set.select_for_update().all()
             for event_equipment in event_equipments:
                 equipment = event_equipment.equipment
-                equipment.quantity_available += event_equipment.quantity
+                equipment.equipment_quantity += event_equipment.quantity
                 equipment.save()
             self.eventequipment_set.all().delete()
             if hasattr(self, "approval"):

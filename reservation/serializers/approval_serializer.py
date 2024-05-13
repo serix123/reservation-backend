@@ -50,5 +50,5 @@ class ApprovalSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Approval
-        fields = ['id', "slip_number", 'event', 'event_details', 'requesitioner', 'status',
-                  'immediate_head_approver', 'person_in_charge_approver', 'immediate_head_status', 'person_in_charge_status', 'admin_status', 'immediate_head_update_date', 'person_in_charge_update_date', 'admin_update_date']
+        fields = ['id', "slip_number", 'event', 'event_details', 'requesitioner', 'status', 'status_update_date',
+                  'immediate_head_approver', 'person_in_charge_approver', 'admin_approver', 'immediate_head_status', 'person_in_charge_status', 'admin_status', 'immediate_head_update_date', 'person_in_charge_update_date', 'admin_update_date']
