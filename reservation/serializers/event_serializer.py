@@ -3,7 +3,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 # import recurrence.serializers
-from reservation.models import Approval, Employee, Event, EventEquipment, Notification
+from reservation.models import Approval,Department, Employee, Event, EventEquipment, Notification
 
 
 class EventEquipmentSerializer(serializers.ModelSerializer):
@@ -20,14 +20,22 @@ class EventSerializer(serializers.ModelSerializer):
         source="eventequipment_set", many=True, required=False
     )
 
+    department = serializers.PrimaryKeyRelatedField(
+        queryset=Department.objects.all(),
+        required=False,  # Not required for updates
+        allow_null=True,  # Allows the person_in_charge to be null
+    )
+
     class Meta:
         model = Event
         fields = [
             #   'requesitioner',
             "id",
+            "requesitioner",
             "slip_number",
             "event_name",
             "event_description",
+            "department",
             "contact_number",
             "additional_needs",
             "reserved_facility",
@@ -45,6 +53,7 @@ class EventSerializer(serializers.ModelSerializer):
             "end_time": {"required": False, "allow_null": True},
             "equipments": {"required": False, "allow_null": True},
             "slip_number": {"required": False, "allow_null": True},
+            "requesitioner": {"required": False, "allow_null": True},
         }
 
     def validate_event_file(self, value):

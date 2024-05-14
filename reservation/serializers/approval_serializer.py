@@ -39,7 +39,7 @@ class ApprovalSerializer(serializers.ModelSerializer):
                 "contact_number": obj.event.contact_number,
                 # "reserved_facility": obj.event.reserved_facility,
                 "participants_quantity": obj.event.participants_quantity,
-                "department": obj.event.department,
+                # "department": obj.event.department,
                 "start_time": obj.event.start_time,
                 "end_time": obj.event.end_time,
                 # "equipments": obj.event.equipments,

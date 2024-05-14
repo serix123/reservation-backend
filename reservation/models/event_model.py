@@ -1,5 +1,6 @@
 import uuid
 from django.db import models, transaction
+from reservation.models.department_model import Department
 from reservation.models.employee_model import Employee
 from reservation.models.equipment_model import Equipment
 from reservation.models.facility_model import Facility
@@ -17,7 +18,7 @@ class Event(models.Model):
     )
     participants_quantity = models.PositiveIntegerField(default=0)
     department = models.ForeignKey(
-        "Department",
+        Department,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
