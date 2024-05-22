@@ -1,6 +1,7 @@
 from django.urls import path, include
 
 
+from authentication.views.csv_views import upload_csv_create_users
 from authentication.views.token_views import MyTokenObtainPairView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .views import user_views
@@ -14,6 +15,8 @@ token_paths = [
 
 urlpatterns = [
     path("register/", user_views.register, name="user-registration"),
+    path('upload-csv/', upload_csv_create_users,
+         name='upload_csv_create_users'),
     path("register/admin/", user_views.register_admin, name="admin-registration"),
     path("register/employee/", user_views.register_employee,
          name="employee-registration"),

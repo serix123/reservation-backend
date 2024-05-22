@@ -104,3 +104,7 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
         return user
+    
+
+class CSVUploadSerializer(serializers.Serializer):
+    file = serializers.FileField()
