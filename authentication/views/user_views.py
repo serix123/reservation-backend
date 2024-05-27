@@ -1,8 +1,10 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.views.decorators.csrf import csrf_exempt
+from authentication.models import User
 from authentication.serializers import UserSerializer
 
 
@@ -37,3 +39,11 @@ def register_employee(request):
         if user:
             return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def delete(request, pk):
+    user = get_object_or_404(User, pk=pk)
+    user.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)

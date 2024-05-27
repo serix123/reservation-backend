@@ -6,10 +6,10 @@ from reservation.serializers.facility_serializer import FacilitySerializer
 
 
 class EmployeeSerializer(serializers.ModelSerializer):
-    approvals = ApprovalSerializer(many=True)
-    immediate_head_approvals = ApprovalSerializer(many=True)
-    person_in_charge_approvals = ApprovalSerializer(many=True)
-    managed_facilities = FacilitySerializer(many=True)
+    approvals = ApprovalSerializer(many=True, read_only=True)
+    immediate_head_approvals = ApprovalSerializer(many=True, read_only=True)
+    person_in_charge_approvals = ApprovalSerializer(many=True, read_only=True)
+    managed_facilities = FacilitySerializer(many=True, read_only=True)
     immediate_head_details = serializers.SerializerMethodField()
     department_details = serializers.SerializerMethodField()
     is_admin = serializers.ReadOnlyField()
@@ -21,6 +21,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "is_admin",
+            "user",
             "immediate_head",
             "immediate_head_details",
             "department",
@@ -30,6 +31,13 @@ class EmployeeSerializer(serializers.ModelSerializer):
             "person_in_charge_approvals",
             "managed_facilities",
         ]
+        extra_kwargs = {
+            "user": {"required": False},
+            "approvals": {"required": False},
+            "immediate_head_approvals": {"required": False, },
+            "person_in_charge_approvals": {"required": False, },
+            "managed_facilities": {"required": False, },
+        }
 
     def get_immediate_head_details(self, obj):
         if obj.immediate_head:
@@ -55,12 +63,14 @@ class EmployeeDepartmentUpdateSerializer(serializers.Serializer):
 
     def validate_department_id(self, value):
         if not Department.objects.filter(id=value).exists():
-            raise serializers.ValidationError("This department does not exist.")
+            raise serializers.ValidationError(
+                "This department does not exist.")
         return value
 
     def update(self, instance, validated_data):
         employee_ids = validated_data.get("employee_ids")
-        department = Department.objects.get(id=validated_data.get("department_id"))
+        department = Department.objects.get(
+            id=validated_data.get("department_id"))
         employees = Employee.objects.filter(id__in=employee_ids)
         for employee in employees:
             employee.department = department
@@ -69,5 +79,6 @@ class EmployeeDepartmentUpdateSerializer(serializers.Serializer):
 
     def validate_employee_ids(self, value):
         if not Employee.objects.filter(id__in=value).exists():
-            raise serializers.ValidationError("One or more employee IDs are invalid.")
+            raise serializers.ValidationError(
+                "One or more employee IDs are invalid.")
         return value

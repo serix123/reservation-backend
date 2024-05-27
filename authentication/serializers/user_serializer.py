@@ -3,14 +3,16 @@ from authentication.models import User
 from reservation.models import Employee
 from reservation.serializers import EmployeeSerializer
 
+DEFAULT_PASSWORD = 'pnMGgxsG1P3MKGk'
+
 
 class UserSerializer(serializers.ModelSerializer):
 
     employee = EmployeeSerializer(required=False)
-    password = serializers.CharField(
-        style={"input_type": "password"}, write_only=True)
-    password2 = serializers.CharField(
-        style={"input_type": "password"}, write_only=True)
+    password = serializers.CharField(required=False, allow_null=True,
+                                     style={"input_type": "password"}, write_only=True)
+    password2 = serializers.CharField(required=False, allow_null=True,
+                                      style={"input_type": "password"}, write_only=True)
 
     class Meta:
         model = User
@@ -23,17 +25,20 @@ class UserSerializer(serializers.ModelSerializer):
             "employee",
         )
         extra_kwargs = {
-            "password": {"write_only": True},
-            "password2": {"write_only": True},
+            "password": {"required": False, "write_only": True},
+            "password2": {"required": False, "write_only": True},
         }
 
     def create(self):
         password = self.validated_data.pop("password")
         password2 = self.validated_data.pop("password2")
 
-        if password != password2:
-            raise serializers.ValidationError(
-                {"password": "Passwords must match"})
+        if password is not None or password2 is not None:
+            if password != password2:
+                raise serializers.ValidationError(
+                    {"password": "Passwords must match"})
+        else:
+            password = DEFAULT_PASSWORD
 
         user = User.objects.create_user(
             first_name=self.validated_data["first_name"],
@@ -104,3 +109,7 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
         return user
+
+
+class CSVUploadSerializer(serializers.Serializer):
+    file = serializers.FileField()
