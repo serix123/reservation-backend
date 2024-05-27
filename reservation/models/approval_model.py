@@ -40,12 +40,14 @@ class Approval(models.Model):
 
     # Indicates whether the event is approved
     # immediate_head_approved = models.BooleanField(default=False)
-    immediate_head_status = models.IntegerField(default=0, choices=APPROVER_CHOICE)
+    immediate_head_status = models.IntegerField(
+        default=0, choices=APPROVER_CHOICE)
     immediate_head_update_date = models.DateTimeField(null=True, blank=True)
 
     # Indicates whether the event is approved
     # person_in_charge_approved = models.BooleanField(default=False)
-    person_in_charge_status = models.IntegerField(default=0, choices=APPROVER_CHOICE)
+    person_in_charge_status = models.IntegerField(
+        default=0, choices=APPROVER_CHOICE)
     person_in_charge_update_date = models.DateTimeField(null=True, blank=True)
 
     # Indicates whether the event is approved
@@ -109,7 +111,7 @@ class Approval(models.Model):
 
     def approve_by_admin(self, employee):
         if employee.is_admin == True:
-            # self.admin_approver = employee
+            self.admin_approver = employee
             self.admin_status = 1
             self.admin_update_date = timezone.now()
             self.create_notification(
@@ -119,7 +121,7 @@ class Approval(models.Model):
 
     def revoke_by_admin(self, employee):
         if employee.is_admin == True:
-            # self.admin_approver = employee
+            self.admin_approver = employee
             self.admin_status = 0
             self.admin_update_date = timezone.now()
             self.create_notification(
@@ -129,7 +131,7 @@ class Approval(models.Model):
 
     def reject_by_admin(self, employee):
         if employee.is_admin == True:
-            # self.admin_approver = employee
+            self.admin_approver = employee
             self.admin_status = -1
             self.admin_update_date = timezone.now()
             self.create_notification(
@@ -175,23 +177,24 @@ class Approval(models.Model):
             message=message,
             event=self.event,
         )
-        # Notification.objects.create(
-        #     # Assuming requester has a user associated
-        #     recipient=self.immediate_head_approver,
-        #     message=message,
-        #     event=self.event,
-        # )
-        # Notification.objects.create(
-        #     # Assuming requester has a user associated
-        #     recipient=self.person_in_charge_approver,
-        #     message=message,
-        #     event=self.event,
-        # )
-        # Notification.objects.create(
-        #     recipient=self.admin_approver,  # Assuming requester has a user associated
-        #     message=message,
-        #     event=self.event
-        # )
+        Notification.objects.create(
+            # Assuming requester has a user associated
+            recipient=self.immediate_head_approver,
+            message=message,
+            event=self.event,
+        )
+        Notification.objects.create(
+            # Assuming requester has a user associated
+            recipient=self.person_in_charge_approver,
+            message=message,
+            event=self.event,
+        )
+        if self.admin_approver is not None:
+            Notification.objects.create(
+                recipient=self.admin_approver,  # Assuming requester has a user associated
+                message=message,
+                event=self.event
+            )
 
     @property
     def immediate_head_approval(self):
