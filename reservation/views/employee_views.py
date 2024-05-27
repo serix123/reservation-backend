@@ -54,7 +54,7 @@ def get_profile(request):
 
 @api_view(["PATCH"])
 # Add appropriate permissions as needed
-# @permission_classes([])
+@permission_classes([IsAuthenticated])
 def update_employees(request, pk):
     try:
         employee = Employee.objects.get(pk=pk)
@@ -81,7 +81,8 @@ def update_employees_department(request):
         department = Department.objects.get(id=department_id)
 
         # Update the department for all specified employees
-        Employee.objects.filter(id__in=employee_ids).update(department=department)
+        Employee.objects.filter(id__in=employee_ids).update(
+            department=department)
         Employee.objects.filter(id__in=employee_ids).update(
             immediate_head=department.immediate_head
         )

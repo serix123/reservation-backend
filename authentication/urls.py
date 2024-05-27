@@ -15,6 +15,7 @@ token_paths = [
 
 urlpatterns = [
     path("register/", user_views.register, name="user-registration"),
+    path("delete/<str:pk>/", user_views.delete, name="user-delete"),
     path('upload-csv/', upload_csv_create_users,
          name='upload_csv_create_users'),
     path("register/admin/", user_views.register_admin, name="admin-registration"),
@@ -22,6 +23,3 @@ urlpatterns = [
          name="employee-registration"),
     path("token/", include(token_paths)),
 ]
-
-
-

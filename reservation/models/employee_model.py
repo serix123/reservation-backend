@@ -40,6 +40,19 @@ class Employee(models.Model):
     def date_joined(self):
         return self.user.date_joined
 
+    # def save(self, *args, **kwargs):
+    #     # Check if the department has changed
+    #     if self.pk:  # Check if this is an existing object
+    #         original = Employee.objects.get(pk=self.pk)
+    #         if original.department != self.department:
+    #             # Update the head field to the head of the new department
+    #             self.immediate_head = self.department.immediate_head if self.department else None
+    #     else:
+    #         # For new instances, set the head field if department is assigned
+    #         self.immediate_head = self.department.immediate_head if self.department else None
+
+    #     super(Employee, self).save(*args, **kwargs)
+
     def __str__(self):
         return self.first_name + " " + self.last_name
 
