@@ -19,13 +19,13 @@ class Approval(models.Model):
     person_in_charge_approver = models.ForeignKey(
         Employee, related_name="person_in_charge_approvals", on_delete=models.CASCADE
     )
-    # admin_approver = models.ForeignKey(
-    #     Employee,
-    #     related_name="admin_approvals",
-    #     on_delete=models.CASCADE,
-    #     blank=True,
-    #     null=True,
-    # )
+    admin_approver = models.ForeignKey(
+        Employee,
+        related_name="admin_approvals",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
     status = models.CharField(
         max_length=10,
         choices=[
