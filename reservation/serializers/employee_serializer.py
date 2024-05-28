@@ -1,11 +1,11 @@
 from rest_framework import serializers
-
 from reservation.models import Department, Employee
 from reservation.serializers.approval_serializer import ApprovalSerializer
 from reservation.serializers.facility_serializer import FacilitySerializer
 
 
 class EmployeeSerializer(serializers.ModelSerializer):
+    email = serializers.SerializerMethodField()
     approvals = ApprovalSerializer(many=True, read_only=True)
     immediate_head_approvals = ApprovalSerializer(many=True, read_only=True)
     person_in_charge_approvals = ApprovalSerializer(many=True, read_only=True)
@@ -20,6 +20,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
             "id",
             "first_name",
             "last_name",
+            "email",
             "is_admin",
             "user",
             "immediate_head",
@@ -54,6 +55,11 @@ class EmployeeSerializer(serializers.ModelSerializer):
                 "id": obj.department.id,
                 "name": obj.department.name,
             }
+        return None
+
+    def get_email(self, obj):
+        if obj.user:
+            return obj.user.email
         return None
 
 

@@ -1,13 +1,15 @@
+from datetime import datetime
 from django.db import transaction
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 # import recurrence.serializers
-from reservation.models import Approval,Department, Employee, Event, EventEquipment, Notification
+from reservation.models import Approval, Department, Employee, Event, EventEquipment, Notification
 
 
 class EventEquipmentSerializer(serializers.ModelSerializer):
-    equipment_name = serializers.ReadOnlyField(source="equipment.equipment_name")
+    equipment_name = serializers.ReadOnlyField(
+        source="equipment.equipment_name")
 
     class Meta:
         model = EventEquipment
@@ -66,9 +68,28 @@ class EventSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, data):
+        current_time = datetime.now()
+
         if "start_time" in data and "end_time" in data:
+
+            if data["start_time"].date() <= current_time.date():
+                raise serializers.ValidationError({
+                    'start_time': 'Start time must be a future date.'
+                })
+
+            if data["end_time"].date() <= current_time.date():
+                raise serializers.ValidationError({
+                    'end_time': 'End time must be a future date.'
+                })
+
+            if data["start_time"] >= data["end_time"]:
+                raise serializers.ValidationError({
+                    'end_time': 'End time must be after the start time.'
+                })
+
             if data["start_time"] > data["end_time"]:
-                raise serializers.ValidationError("End time must be after start time.")
+                raise serializers.ValidationError(
+                    "End time must be after start time.")
             # if data['start_time'] == data['end_time']:
             #     raise serializers.ValidationError(
             #         "Start time and end time cannot be the same.")
@@ -98,10 +119,12 @@ class EventSerializer(serializers.ModelSerializer):
                 user = self.context["request"].user
                 employee = Employee.objects.get(user=user)
                 equipments_data = validated_data.pop("eventequipment_set", [])
-                event = Event.objects.create(requesitioner=employee, **validated_data)
+                event = Event.objects.create(
+                    requesitioner=employee, **validated_data)
 
                 for equipment_data in equipments_data:
-                    EventEquipment.objects.create(event=event, **equipment_data)
+                    EventEquipment.objects.create(
+                        event=event, **equipment_data)
 
                 status = validated_data.pop("status", {})
                 if status == "application":
@@ -125,12 +148,32 @@ class EventSerializer(serializers.ModelSerializer):
                         # Default status
                         # status='pending'
                     )
-                    message = "An Approval request has been made"
+                    message = f"An Approval request({event.slip_number}) has been made."
                     Notification.objects.create(
                         recipient=employee,  # Assuming requester has a user associated
                         message=message,
                         event=event,
                     )
+                    Notification.objects.create(
+                        # Assuming requester has a user associated
+                        recipient=event.reserved_facility.person_in_charge,
+                        message=message,
+                        event=event,
+                    )
+                    Notification.objects.create(
+                        recipient=employee.immediate_head,  # Assuming requester has a user associated
+                        message=message,
+                        event=event,
+                    )
+                    admins = Employee.objects.filter(is_admin=True)
+                    # Loop through each admin and create a notification
+                    for admin in admins:
+                        Notification.objects.create(
+                            recipient=admin,
+                            message=message,
+                            event=event
+                        )
+
             return event
         except Exception as e:
             # Handle specific error, e.g., insufficient equipment quantity
@@ -145,7 +188,8 @@ class EventSerializer(serializers.ModelSerializer):
                 instance.start_time = validated_data.get(
                     "start_time", instance.start_time
                 )
-                instance.end_time = validated_data.get("end_time", instance.end_time)
+                instance.end_time = validated_data.get(
+                    "end_time", instance.end_time)
                 # Handle the equipment data:
                 instance.eventequipment_set.all().delete()
                 # for event_equipment in event_equipments:

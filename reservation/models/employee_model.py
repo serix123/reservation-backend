@@ -27,13 +27,17 @@ class Employee(models.Model):
     )
     department = models.ForeignKey(
         Department, on_delete=models.SET_NULL, null=True)
+    is_admin = models.BooleanField(default=False)
 
     REQUIRED_FIELDS = ["user"]
 
     # def __str__(self):
     #     return  self.user.username
+    # @property
+    # def is_admin(self):
+    #     return self.user.is_superuser
     @property
-    def is_admin(self):
+    def is_superuser(self):
         return self.user.is_superuser
 
     @property
@@ -50,8 +54,10 @@ class Employee(models.Model):
     #     else:
     #         # For new instances, set the head field if department is assigned
     #         self.immediate_head = self.department.immediate_head if self.department else None
-
     #     super(Employee, self).save(*args, **kwargs)
+    def save(self, *args, **kwargs):
+        self.is_admin = self.user.is_superuser
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.first_name + " " + self.last_name
