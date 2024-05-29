@@ -23,10 +23,10 @@ class Employee(models.Model):
     last_name = models.CharField(max_length=100, default="last_name")
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     immediate_head = models.ForeignKey(
-        "self", on_delete=models.SET_NULL, null=True, related_name="subordinates"
+        "self", on_delete=models.SET_NULL, null=True, blank=True, related_name="subordinates"
     )
     department = models.ForeignKey(
-        Department, on_delete=models.SET_NULL, null=True)
+        Department, on_delete=models.SET_NULL, null=True, blank=True)
     is_admin = models.BooleanField(default=False)
 
     REQUIRED_FIELDS = ["user"]
