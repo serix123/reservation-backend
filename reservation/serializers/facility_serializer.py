@@ -39,6 +39,16 @@ class FacilitySerializer(serializers.ModelSerializer):
         if self.instance and self.instance.id != value:
             raise serializers.ValidationError("ID cannot be modified.")
         return value
+    
+    def validate_event_file(self, value):
+        if value is not None and not value.name.endswith(
+            (".jpg", ".jpeg", ".png", ".pdf")
+        ):
+            raise serializers.ValidationError(
+                "Unsupported file format. Only JPG, JPEG, PNG, and PDF are allowed."
+            )
+        return value
+
 
     def create(self, validated_data):
         if "department" not in validated_data:

@@ -185,8 +185,26 @@ class EventSerializer(serializers.ModelSerializer):
                 instance.event_name = validated_data.get(
                     "event_name", instance.event_name
                 )
-                instance.start_time = validated_data.get(
-                    "start_time", instance.start_time
+                instance.event_description = validated_data.get(
+                    "event_description", instance.event_description
+                )
+                instance.department = validated_data.get(
+                    "department", instance.department
+                )
+                instance.contact_number = validated_data.get(
+                    "contact_number", instance.contact_number
+                )
+                instance.additional_needs = validated_data.get(
+                    "additional_needs", instance.additional_needs
+                )
+                instance.reserved_facility = validated_data.get(
+                    "reserved_facility", instance.reserved_facility
+                )
+                instance.participants_quantity = validated_data.get(
+                    "participants_quantity", instance.participants_quantity
+                )
+                instance.event_file = validated_data.get(
+                    "event_file", instance.event_file
                 )
                 instance.end_time = validated_data.get(
                     "end_time", instance.end_time)
@@ -211,14 +229,15 @@ class EventSerializer(serializers.ModelSerializer):
                         "quantity", event_eq.quantity
                     )
                     event_eq.save()
-
+                user = self.context.get("user", None)
+                employee = Employee.objects.get(user=user)
                 status = validated_data.get("status")
                 if instance.status != "application" and status == "application":
                     instance.status = status
                     instance.save()
                     # Create approval after the status update
-                    user = self.context.get("user", None)
-                    employee = Employee.objects.get(user=user)
+                    # user = self.context.get("user", None)
+                    # employee = Employee.objects.get(user=user)
 
                     person_in_charge_status = 0
                     admin_status = 0
@@ -260,6 +279,7 @@ class EventSerializer(serializers.ModelSerializer):
                         event=instance,
                     )
                 else:
+                    instance.status = status
                     instance.save()
                 return instance
         except Exception as e:
