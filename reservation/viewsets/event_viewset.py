@@ -19,7 +19,8 @@ class EventViewSet(viewsets.ModelViewSet):
     @staticmethod
     def round_to_nearest_quarter(dt):
         """Round a datetime to the nearest 15-minute mark."""
-        new_minute = (dt.minute // 15 + (1 if dt.minute % 15 >= 7.5 else 0)) * 15
+        new_minute = (dt.minute // 15 + (1 if dt.minute %
+                      15 >= 7.5 else 0)) * 15
         return dt.replace(minute=0, second=0, microsecond=0) + datetime.timedelta(
             minutes=new_minute
         )
@@ -60,6 +61,38 @@ class EventViewSet(viewsets.ModelViewSet):
             )
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    # def update(self, request, *args, **kwargs):
+        # data = request.data.get("data")
+        # instance = self.get_object()
+        # if data:
+        #     try:
+        #         json_data = json.loads(
+        #             data
+        #         )  # Convert JSON string back to Python dictionary
+        #     except json.JSONDecodeError:
+        #         return Response(
+        #             {"error": "Invalid JSON data"}, status=status.HTTP_400_BAD_REQUEST
+        #         )
+        # else:
+        #     return Response(
+        #         {"error": "No data provided"}, status=status.HTTP_400_BAD_REQUEST
+        #     )
+
+        # # Handle file if included
+        # if "event_file" in request.FILES:
+        #     json_data["event_file"] = request.FILES["event_file"]
+
+        # serializer = self.get_serializer(
+        #     instance, data=json_data, partial=True)
+        # if serializer.is_valid():
+        #     self.perform_update(serializer)
+        #     headers = self.get_success_headers(serializer.data)
+        #     return Response(
+        #         serializer.data, status=status.HTTP_200_OK
+        #     )
+        # else:
+        #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get_queryset(self):
         queryset = Event.objects.all()

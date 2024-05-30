@@ -63,6 +63,7 @@ class EmployeeAdmin(admin.ModelAdmin):
 class DepartmentAdmin(admin.ModelAdmin):
     readonly_fields = ("id",)
     list_display = (
+        "id",
         "name",
         "immediate_head",
     )

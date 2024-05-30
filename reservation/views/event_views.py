@@ -87,7 +87,9 @@ def partial_update_event(request, slip_number):
     # Handle file if included
     if "event_file" in request.FILES:
         json_data["event_file"] = request.FILES["event_file"]
-
+        print(json_data["event_file"])
+    else:
+        print("NO IMAGE")
     event = get_object_or_404(Event, slip_number=slip_number)
     serializer = EventSerializer(
         # event, data=request.data, partial=True, context={"user": request.user}
