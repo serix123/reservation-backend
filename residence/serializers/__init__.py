@@ -1,0 +1,1 @@
+from .resident_serializer import CreateResidenceSerializer,ResidenceSerializer

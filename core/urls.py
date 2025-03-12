@@ -22,11 +22,14 @@ from django.conf.urls.static import static
 api_paths = [
     path("auth/", include("authentication.urls")),
     path("reservation/", include("reservation.urls")),
+    # Added Residents API
+    path("lancaster/", include("residence.urls")),
 ]
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include(api_paths)),
+
 ]
 
 if settings.DEBUG:

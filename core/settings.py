@@ -37,6 +37,7 @@ MEDIA_URL = "/media/"
 # Application definition
 
 INSTALLED_APPS = [
+    "residence",
     "reservation",
     "authentication",
     "django.contrib.admin",
