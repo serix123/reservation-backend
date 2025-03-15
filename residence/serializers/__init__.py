@@ -1,1 +1,4 @@
-from .resident_serializer import CreateResidenceSerializer,ResidenceSerializer
+from .resident_serializer import CreateResidenceSerializer, ResidenceSerializer
+from .visitor_serializer import CreateVisitorSerializer, VisitorSerializer
+from .issue_serializer import CreateIssueSerializer, IssueSerializer, ResolveIssueSerializer
+from .event_serializer import EventSerializer, CreateEventSerializer, AttendEventSerializer

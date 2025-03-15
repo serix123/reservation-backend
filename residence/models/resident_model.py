@@ -7,6 +7,7 @@ class Residence(models.Model):
     class Role(models.TextChoices):
         RESIDENT = 'Resident', 'Resident'
         ADMIN = 'Admin', 'Admin'
+        OFFICER = 'Officer', 'Officer'
         # Add other roles as needed
 
     user = models.OneToOneField(

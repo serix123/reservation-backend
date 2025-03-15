@@ -2,6 +2,7 @@ from rest_framework import serializers
 from authentication.models import User
 from reservation.models import Employee
 from reservation.serializers import EmployeeSerializer
+from residence.models import Residence
 
 DEFAULT_PASSWORD = 'pnMGgxsG1P3MKGk'
 
@@ -56,13 +57,20 @@ class UserSerializer(serializers.ModelSerializer):
             password=password,
         )
 
-        employee_data = self.validated_data.pop("employee", {})
-        Employee.objects.create(
-            user=user,
-            first_name=self.validated_data["first_name"],
-            last_name=self.validated_data["last_name"],
-            **employee_data
-        )
+        # Residence.objects.create(
+        #     user=user,
+        #     first_name=self.validated_data["first_name"],
+        #     last_name=self.validated_data["last_name"],
+        #     role=Residence.Role.RESIDENT
+        # )
+
+        # employee_data = self.validated_data.pop("employee", {})
+        # Employee.objects.create(
+        #     user=user,
+        #     first_name=self.validated_data["first_name"],
+        #     last_name=self.validated_data["last_name"],
+        #     **employee_data
+        # )
 
         return user
 

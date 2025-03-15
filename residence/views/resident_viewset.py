@@ -1,11 +1,30 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.filters import SearchFilter, OrderingFilter
+
 from residence.models import Residence
 from residence.serializers import ResidenceSerializer, CreateResidenceSerializer
 
 
 class ResidenceViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
+
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    search_fields = [
+        'first_name',
+        'last_name',
+        'role',
+        'contact_number',
+        'address'
+    ]
+    filterset_fields = ['role', 'registration_date']
+    ordering_fields = [
+        'registration_date',
+        'first_name',
+        'last_name'
+    ]
+    ordering = ['-registration_date']  # Default ordering
 
     def get_serializer_class(self):
         if self.action == 'create':
