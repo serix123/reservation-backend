@@ -37,12 +37,12 @@ class VisitorViewSet(viewsets.ModelViewSet):
                 {"error": "Visitor must be in pending status to check in"},
                 status=status.HTTP_400_BAD_REQUEST  # This uses DRF's status codes
             )
-
         visitor.status = Visitor.VisitStatus.CHECKED_IN
         visitor.check_in_time = timezone.now()
         visitor.save()
 
         return Response(VisitorSerializer(visitor).data)
+    
 
     @action(detail=True, methods=['post'])
     def check_out(self, request, pk=None):

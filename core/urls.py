@@ -23,7 +23,7 @@ api_paths = [
     path("auth/", include("authentication.urls")),
     path("reservation/", include("reservation.urls")),
     # Added Residents API
-    path("lancaster/", include("residence.urls")),
+    path("residence/", include("residence.urls")),
 ]
 
 urlpatterns = [
