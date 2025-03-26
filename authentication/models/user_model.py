@@ -54,7 +54,8 @@ class User(AbstractUser):
         verbose_name="Last Name",
         max_length=255,
     )
-    email = models.EmailField(verbose_name="email", max_length=255, unique=True)
+    email = models.EmailField(verbose_name="email",
+                              max_length=255, unique=True)
     password = models.CharField(max_length=255)
     username = None
     objects = UserManager()

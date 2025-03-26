@@ -1,10 +1,12 @@
 from django.urls import path, include
-
-
 from authentication.views.csv_views import upload_csv_create_users
 from authentication.views.token_views import MyTokenObtainPairView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from .views import user_views
+from authentication.views import user_views, AdminUserViewSet
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register(r'admin/users', AdminUserViewSet, basename='admin-user')
 
 
 token_paths = [
@@ -23,4 +25,8 @@ urlpatterns = [
     path("register/employee/", user_views.register_employee,
          name="employee-registration"),
     path("token/", include(token_paths)),
-]
+    path('register/resident/', user_views.ResidentRegistrationView.as_view(),
+         name='register-resident'),
+    path('register/staff/', user_views.StaffRegistrationView.as_view(),
+         name='register-staff'),
+] + router.urls

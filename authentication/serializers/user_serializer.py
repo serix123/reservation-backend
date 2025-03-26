@@ -1,7 +1,7 @@
+from django.utils import timezone
 from rest_framework import serializers
 from authentication.models import User
 from reservation.models import Employee
-from reservation.serializers import EmployeeSerializer
 from residence.models import Residence
 
 DEFAULT_PASSWORD = 'pnMGgxsG1P3MKGk'
@@ -9,7 +9,7 @@ DEFAULT_PASSWORD = 'pnMGgxsG1P3MKGk'
 
 class UserSerializer(serializers.ModelSerializer):
 
-    employee = EmployeeSerializer(required=False)
+    # employee = EmployeeSerializer(required=False)
     password = serializers.CharField(required=False, allow_null=True,
                                      style={"input_type": "password"}, write_only=True)
     password2 = serializers.CharField(required=False, allow_null=True,
@@ -23,8 +23,8 @@ class UserSerializer(serializers.ModelSerializer):
             "email",
             "password",
             "password2",
-            "employee",
         )
+        read_only_fields = ['is_staff', 'is_admin']
         extra_kwargs = {
             "password": {"required": False, "write_only": True},
             "password2": {"required": False, "write_only": True},
@@ -126,6 +126,72 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
         return user
+
+
+class ResidentRegistrationSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = ['email', 'first_name', 'last_name', 'password']
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+    def create(self, validated_data):
+        user = User.objects.create_user(
+            email=validated_data['email'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name'],
+            password=validated_data['password'],
+            is_staff=False,
+            is_superuser=False
+        )
+        Residence.objects.create(
+            user=user,
+            role='Resident',
+            registration_date=timezone.now().date()
+        )
+        return user
+
+
+class StaffRegistrationSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+    role = serializers.ChoiceField(
+        choices=['Admin', 'Officer'], write_only=True)
+
+    class Meta:
+        model = User
+        fields = ['email', 'first_name', 'last_name', 'password', 'role']
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+    def create(self, validated_data):
+        role = validated_data.pop('role')
+        user = User.objects.create_user(
+            email=validated_data['email'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name'],
+            password=validated_data['password'],
+            is_staff=role in ['Admin', 'Officer'],
+            is_superuser=(role == 'Admin')
+        )
+        return user
+
+
+class AdminUserUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['is_staff', 'is_superuser']
+        read_only_fields = ['email', 'first_name', 'last_name']
+
+    def validate(self, attrs):
+        if self.instance == self.context['request'].user:
+            raise serializers.ValidationError(
+                "You cannot modify your own permissions")
+        return attrs
+
 
 
 class CSVUploadSerializer(serializers.Serializer):

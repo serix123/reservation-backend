@@ -5,9 +5,9 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.response import Response
-from residence.models import Visitor
-from residence.serializers import VisitorSerializer, CreateVisitorSerializer
-from residence.permissions import IsAdminOrOfficer, IsResidentOwner
+from residence.models import Visitor, Residence
+from residence.serializers import VisitorSerializer, CreateVisitorSerializer, SecurityCheckinSerializer
+from residence.permissions import IsAdminOrOfficer, IsResidentOwner, SecurityStaffPermission
 from authentication.models import User
 
 
@@ -15,7 +15,9 @@ class VisitorViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
-        if self.action in ['create', 'update', 'partial_update']:
+        if self.action == 'security_checkin':
+            return SecurityCheckinSerializer
+        elif self.action in ['create', 'update', 'partial_update']:
             return CreateVisitorSerializer
         return VisitorSerializer
 
@@ -42,7 +44,6 @@ class VisitorViewSet(viewsets.ModelViewSet):
         visitor.save()
 
         return Response(VisitorSerializer(visitor).data)
-    
 
     @action(detail=True, methods=['post'])
     def check_out(self, request, pk=None):
@@ -68,3 +69,32 @@ class VisitorViewSet(viewsets.ModelViewSet):
         )
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['post'], url_path='security-checkin')
+    def security_checkin(self, request):
+        """
+        Special endpoint for security staff to create visitors with auto check-in
+        """
+        # Check security staff permissions
+        if not (request.user.is_staff and not request.user.is_superuser):
+            return Response(
+                {"error": "Only security staff can use this endpoint"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Create visitor with auto check-in
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        visitor = serializer.save(
+            resident=request.user.residence,
+            status=Visitor.VisitStatus.CHECKED_IN,
+            check_in_time=timezone.now()
+        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def get_permissions(self):
+        # Only allow security staff to use the security-checkin endpoint
+        if self.action == 'security_checkin':
+            return [IsAuthenticated(), SecurityStaffPermission()]
+        return super().get_permissions()

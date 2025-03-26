@@ -37,9 +37,10 @@ MEDIA_URL = "/media/"
 # Application definition
 
 INSTALLED_APPS = [
-    "residence",
-    "reservation",
     "authentication",
+    "medilab",
+    "reservation",
+    "residence",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",

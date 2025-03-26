@@ -1,12 +1,11 @@
 from rest_framework import serializers
 from residence.models import Residence
-from django.contrib.auth import get_user_model
-
-User = get_user_model()
+from authentication.models import User
 
 
 class ResidenceSerializer(serializers.ModelSerializer):
     user_email = serializers.EmailField(source='user.email', read_only=True)
+    # user = ResidenceUserSerializer(read_only=True)
 
     class Meta:
         model = Residence
@@ -18,9 +17,20 @@ class ResidenceSerializer(serializers.ModelSerializer):
             'role',
             'contact_number',
             'address',
-            'registration_date'
+            'registration_date',
+            # 'user',
         ]
         read_only_fields = ('registration_date',)
+
+
+class ResidenceUserSerializer(serializers.ModelSerializer):
+    residence = ResidenceSerializer(read_only=True)
+
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'first_name',
+                  'last_name', 'is_staff', 'is_superuser', 'residence']
+        read_only_fields = fields
 
 
 class CreateResidenceSerializer(serializers.ModelSerializer):
@@ -64,3 +74,12 @@ class CreateResidenceSerializer(serializers.ModelSerializer):
             last_name=last_name,
             **validated_data
         )
+
+
+class ResidenceUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Residence
+        fields = ['contact_number', 'address', 'registration_date']
+        extra_kwargs = {
+            'registration_date': {'required': False}
+        }

@@ -16,3 +16,8 @@ class IsAdminOrOfficer(permissions.BasePermission):
                 getattr(user.residence, 'role', None) in ['Admin', 'Officer']
             )
         )
+
+
+class SecurityStaffPermission(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.is_staff and not request.user.is_superuser

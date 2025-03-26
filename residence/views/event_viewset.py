@@ -1,5 +1,6 @@
 from django.utils import timezone
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, status
+from rest_framework.permissions import IsAuthenticated,IsAuthenticatedOrReadOnly
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from residence.models import Event
@@ -7,7 +8,7 @@ from residence.serializers import EventSerializer, CreateEventSerializer, Attend
 
 
 class EventViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     filterset_fields = ['creator', 'date']
     ordering_fields = ['date', 'attendees_count']
     search_fields = ['name', 'location', 'details']

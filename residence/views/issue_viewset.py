@@ -1,4 +1,5 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
@@ -7,7 +8,7 @@ from residence.serializers import IssueSerializer, CreateIssueSerializer, Resolv
 
 
 class IssueViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     filterset_fields = ['status']
     ordering_fields = ['reported_date', 'resolved_date']
     search_fields = ['title', 'description']
