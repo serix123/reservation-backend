@@ -193,6 +193,12 @@ class AdminUserUpdateSerializer(serializers.ModelSerializer):
         return attrs
 
 
+class UserWithResidenceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'first_name', 'last_name',
+                  'is_staff', 'is_superuser']
+
 
 class CSVUploadSerializer(serializers.Serializer):
     file = serializers.FileField()

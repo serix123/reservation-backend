@@ -2,12 +2,12 @@ from django.urls import path, include
 from authentication.views.csv_views import upload_csv_create_users
 from authentication.views.token_views import MyTokenObtainPairView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from authentication.views import user_views, AdminUserViewSet
+from authentication.views import user_views, AdminUserViewSet, UserViewSet
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
 router.register(r'admin/users', AdminUserViewSet, basename='admin-user')
-
+router.register(r'users', UserViewSet, basename='user')
 
 token_paths = [
     path("", MyTokenObtainPairView.as_view(), name="token_obtain_pair"),

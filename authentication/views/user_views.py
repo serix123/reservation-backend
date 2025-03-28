@@ -1,12 +1,15 @@
 from django.shortcuts import get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, permission_classes, action
+from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.generics import RetrieveAPIView, CreateAPIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.response import Response
-from django.views.decorators.csrf import csrf_exempt
 from authentication.models import User
-from authentication.serializers import UserSerializer, ResidentRegistrationSerializer, StaffRegistrationSerializer, AdminUserUpdateSerializer
+from authentication.permissions import IsAdminOrOfficer
+from authentication.serializers import UserSerializer, ResidentRegistrationSerializer, StaffRegistrationSerializer, AdminUserUpdateSerializer, UserWithResidenceSerializer
 
 
 @api_view(["POST"])
@@ -107,3 +110,26 @@ class AdminUserViewSet(viewsets.ViewSet):
         serializer.save()
 
         return Response(serializer.data)
+
+
+class UserViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = UserWithResidenceSerializer
+    permission_classes = [IsAdminOrOfficer]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['residence__role', 'is_staff', 'is_superuser']
+    search_fields = ['email', 'first_name', 'last_name']
+    ordering_fields = ['email', 'date_joined']
+    ordering = ['-date_joined']
+
+    def get_queryset(self):
+        user = self.request.user
+
+        # Superadmins see all users
+        if user.is_superuser:
+            return User.objects.all()
+
+        # Officers only see residents
+        return User.objects.filter(
+            is_staff=False,
+            is_superuser=False
+        )
