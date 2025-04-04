@@ -1,17 +1,27 @@
 from django.utils import timezone
 from rest_framework import viewsets, status
-from rest_framework.permissions import IsAuthenticated,IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from residence.models import Event
 from residence.serializers import EventSerializer, CreateEventSerializer, AttendEventSerializer
+from rest_framework.filters import OrderingFilter
+from django_filters.rest_framework import DjangoFilterBackend
+from core.filters import SmartSearchFilter
 
 
 class EventViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
     filterset_fields = ['creator', 'date']
     ordering_fields = ['date', 'attendees_count']
-    search_fields = ['name', 'location', 'details']
+    filter_backends = [SmartSearchFilter, DjangoFilterBackend, OrderingFilter]
+    search_fields = [
+        'user__email',
+        'first_name',
+        'last_name',
+        'contact_number',
+        'address'
+    ]
 
     def get_serializer_class(self):
         if self.action == 'create':

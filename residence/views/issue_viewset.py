@@ -1,8 +1,12 @@
 from rest_framework import viewsets, status
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
+from rest_framework.filters import OrderingFilter
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.utils import timezone
+from django_filters.rest_framework import DjangoFilterBackend
+
+from core.filters import SmartSearchFilter
 from residence.models import Issue
 from residence.serializers import IssueSerializer, CreateIssueSerializer, ResolveIssueSerializer
 
@@ -10,6 +14,7 @@ from residence.serializers import IssueSerializer, CreateIssueSerializer, Resolv
 class IssueViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filterset_fields = ['status']
+    filter_backends = [SmartSearchFilter, DjangoFilterBackend, OrderingFilter]
     ordering_fields = ['reported_date', 'resolved_date']
     search_fields = ['title', 'description']
 

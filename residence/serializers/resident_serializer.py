@@ -20,7 +20,8 @@ class ResidenceSerializer(serializers.ModelSerializer):
             'registration_date',
             # 'user',
         ]
-        read_only_fields = ('registration_date',)
+        read_only_fields = ('registration_date', 'first_name',
+                            'last_name',)
 
 
 class ResidenceUserSerializer(serializers.ModelSerializer):

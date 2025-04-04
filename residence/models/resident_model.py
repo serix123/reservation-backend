@@ -26,6 +26,8 @@ class Residence(models.Model):
     registration_date = models.DateField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
+        self.first_name = self.user.first_name
+        self.last_name = self.user.last_name
         # Automatically set role based on user permissions
         if self.user.is_superuser:
             self.role = 'Admin'
@@ -39,4 +41,4 @@ class Residence(models.Model):
         return f"{self.first_name} {self.last_name} ({self.role})"
 
     class Meta:
-        db_table = "residence_info" 
+        db_table = "residence_info"

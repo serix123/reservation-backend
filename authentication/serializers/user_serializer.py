@@ -183,14 +183,36 @@ class StaffRegistrationSerializer(serializers.ModelSerializer):
 class AdminUserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['is_staff', 'is_superuser']
-        read_only_fields = ['email', 'first_name', 'last_name']
+        fields = ['email', 'first_name',
+                  'last_name', 'is_staff', 'is_superuser']
+        # read_only_fields = ['email', 'first_name', 'last_name']
+        extra_kwargs = {
+            'email': {'required': False},
+            'first_name': {'required': False},
+            'last_name': {'required': False},
+            'is_staff': {'required': False},
+            'is_superuser': {'required': False},
+        }
 
     def validate(self, attrs):
         if self.instance == self.context['request'].user:
             raise serializers.ValidationError(
                 "You cannot modify your own permissions")
         return attrs
+
+    def update(self, instance, validated_data):
+        residence_data = validated_data.pop('residence', {})
+
+        # Update user permissions
+        instance = super().update(instance, validated_data)
+
+        # Update residence information
+        residence = instance.residence
+        for key, value in residence_data.items():
+            setattr(residence, key, value)
+        residence.save()
+
+        return instance
 
 
 class UserWithResidenceSerializer(serializers.ModelSerializer):

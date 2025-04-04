@@ -3,8 +3,9 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.filters import OrderingFilter
 
+from core.filters import SmartSearchFilter
 from residence.models import Residence
 from residence.serializers import ResidenceSerializer, CreateResidenceSerializer, ResidenceUserSerializer
 
@@ -12,7 +13,8 @@ from residence.serializers import ResidenceSerializer, CreateResidenceSerializer
 class ResidenceViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filter_backends = [DjangoFilterBackend,
+                       SmartSearchFilter,  OrderingFilter]
     search_fields = [
         'first_name',
         'last_name',

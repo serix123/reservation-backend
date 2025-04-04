@@ -3,16 +3,25 @@ from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.filters import OrderingFilter
 from rest_framework.response import Response
 from residence.models import Visitor, Residence
 from residence.serializers import VisitorSerializer, CreateVisitorSerializer, SecurityCheckinSerializer
 from residence.permissions import IsAdminOrOfficer, IsResidentOwner, SecurityStaffPermission
 from authentication.models import User
+from core.filters import SmartSearchFilter
 
 
 class VisitorViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend,
+                       SmartSearchFilter,  OrderingFilter]
+    search_fields = [
+        'name',
+        'visit_purpose',
+        'residence__user__email',
+        'residence__address'
+    ]
 
     def get_serializer_class(self):
         if self.action == 'security_checkin':
