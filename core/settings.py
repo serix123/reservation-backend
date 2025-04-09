@@ -23,11 +23,17 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATIC_URL = "/static/"
-# STATICFILES_DIRS = [
-#     os.path.join(
-#         BASE_DIR, "static"
-#     ),  # folders where you have static files in development.
-# ]
+STATICFILES_DIRS = [
+    os.path.join(
+        BASE_DIR, "static"
+    ),  # folders where you have static files in development.
+]
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+# Base directory for media files
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+# URL to access media files
+MEDIA_URL = "/media/"
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -40,14 +46,7 @@ DEBUG = (
     os.getenv("DEBUG", "True").lower() == "true"
 )  # example of using environment variables for other settings.
 
-
-# Base directory for media files
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
-# URL to access media files
-MEDIA_URL = "/media/"
-
 # Application definition
-
 INSTALLED_APPS = [
     "authentication",
     "medilab",
@@ -73,6 +72,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
 ]
 
 REST_FRAMEWORK = {
