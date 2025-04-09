@@ -30,22 +30,54 @@ class PatientProfile(models.Model):
         return f"{self.user.first_name} {self.user.last_name}"
 
     def create_update_application(self, changed_data=None):
-        """Create an application for updating this profile"""
+        """
+        Creates or updates the single allowed application per user.
+        Overwrites any existing application and resets status to pending.
+        """
         if changed_data is None:
             changed_data = {}
 
-        return PatientProfileApplication.objects.create(
+        # Get or create the single application for this user
+        application, created = PatientProfileApplication.objects.get_or_create(
             user=self.user,
-            date_of_birth=changed_data.get("date_of_birth", self.date_of_birth),
-            address=changed_data.get("address", self.address),
-            village=changed_data.get("village", self.village),
-            medical_history=changed_data.get("medical_history", self.medical_history),
-            id_proof_base64=changed_data.get("id_proof_base64", ""),
-            id_proof_filename=changed_data.get("id_proof_filename", "update_request"),
-            status="pending",
-            is_update=True,
-            existing_profile=self,
+            defaults={
+                "date_of_birth": changed_data.get("date_of_birth", self.date_of_birth),
+                "address": changed_data.get("address", self.address),
+                "village": changed_data.get("village", self.village),
+                "medical_history": changed_data.get(
+                    "medical_history", self.medical_history
+                ),
+                "id_proof_base64": changed_data.get("id_proof_base64", ""),
+                "id_proof_filename": changed_data.get(
+                    "id_proof_filename", "update_request"
+                ),
+                "status": "pending",
+                "is_update": True if self.pk else False,
+                "existing_profile": self if self.pk else None,
+            },
         )
+
+        # If application already existed, update it
+        if not created:
+            application.date_of_birth = changed_data.get(
+                "date_of_birth", self.date_of_birth
+            )
+            application.address = changed_data.get("address", self.address)
+            application.village = changed_data.get("village", self.village)
+            application.medical_history = changed_data.get(
+                "medical_history", self.medical_history
+            )
+
+            # Only update ID proof if new one is provided
+            if "id_proof_base64" in changed_data:
+                application.id_proof_base64 = changed_data["id_proof_base64"]
+            if "id_proof_filename" in changed_data:
+                application.id_proof_filename = changed_data["id_proof_filename"]
+
+            application.status = "pending"  # Reset status
+            application.save()
+
+        return application
 
     class Meta:
         ordering = ["-created_at"]

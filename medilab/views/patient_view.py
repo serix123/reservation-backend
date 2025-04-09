@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, serializers
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
@@ -50,20 +50,25 @@ class PatientProfileViewSet(viewsets.ModelViewSet):
         return PatientProfileSerializer
 
     def update(self, request, *args, **kwargs):
-        """Override update to create application instead of direct update"""
+        """Handle profile updates by creating/modifying the single application"""
         partial = kwargs.pop("partial", False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
 
-        # Instead of calling perform_update, we handle it directly
-        # since we're not actually updating the instance
-        self.perform_create_application(instance, serializer.validated_data)
-
-        return Response(
-            {"detail": "Update request submitted for approval"},
-            status=status.HTTP_202_ACCEPTED,
-        )
+        try:
+            application = instance.create_update_application(serializer.validated_data)
+            return Response(
+                {
+                    "detail": "Application updated successfully",
+                    "application_id": application.id,
+                    "status": application.status,
+                    "is_update": application.is_update,
+                },
+                status=status.HTTP_200_OK,
+            )
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     def perform_create_application(self, instance, validated_data):
         """Helper method to create the update application"""
@@ -95,23 +100,21 @@ class PatientProfileApplicationViewSet(viewsets.ModelViewSet):
         return PatientProfileApplicationSerializer
 
     def perform_create(self, serializer):
-        # Only non-staff users can create applications
+        """Handle application creation ensuring single application per user"""
         if self.request.user.is_staff:
             raise permissions.PermissionDenied(
                 "Staff cannot create profile applications"
             )
 
-        # Check if user already has an approved profile
-        if hasattr(self.request.user, "patient_profile"):
-            raise permissions.PermissionDenied("You already have an approved profile")
-
-        # Check for existing pending applications
-        if PatientProfileApplication.objects.filter(
-            user=self.request.user, status="pending"
-        ).exists():
-            raise permissions.PermissionDenied("You already have a pending application")
-
-        serializer.save(user=self.request.user, status="pending")
+        # This will now either create or update the single application
+        try:
+            if hasattr(self.request.user, "patient_profile"):
+                profile = self.request.user.patient_profile
+                profile.create_update_application(serializer.validated_data)
+            else:
+                serializer.save(user=self.request.user, status="pending")
+        except Exception as e:
+            raise serializers.ValidationError(str(e))
 
     @action(
         detail=True, methods=["patch"], permission_classes=[permissions.IsAdminUser]
