@@ -21,6 +21,16 @@ load_dotenv()  # Load environment variables from .env
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+STATIC_URL = "/static/"
+STATIC_ROOT = os.path.join(
+    BASE_DIR, "staticfiles"
+)  # this is where collectstatic will gather all static files.
+
+STATICFILES_DIRS = [
+    os.path.join(
+        BASE_DIR, "static"
+    ),  # folders where you have static files in development.
+]
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -76,18 +86,18 @@ REST_FRAMEWORK = {
         # 'rest_framework.authentication.SessionAuthentication',
         "rest_framework.authentication.TokenAuthentication",
     ),
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,
-    'DEFAULT_FILTER_BACKENDS': [
-        'django_filters.rest_framework.DjangoFilterBackend',
-        'rest_framework.filters.SearchFilter',
-        'rest_framework.filters.OrderingFilter'
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 10,
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.SearchFilter",
+        "rest_framework.filters.OrderingFilter",
     ],
-    'SEARCH_PARAM': 'q',
-    'SEARCH_EMPTY_QUERY_RETURNS_ALL': True,
-    'SEARCH_TERM_CASE_SENSITIVE': False,  # Default
-    'SEARCH_TERM_ACCENT_SENSITIVE': False,  # Default
-    'SEARCH_TERM_WHITESPACE_STRIP': True,  # Default
+    "SEARCH_PARAM": "q",
+    "SEARCH_EMPTY_QUERY_RETURNS_ALL": True,
+    "SEARCH_TERM_CASE_SENSITIVE": False,  # Default
+    "SEARCH_TERM_ACCENT_SENSITIVE": False,  # Default
+    "SEARCH_TERM_WHITESPACE_STRIP": True,  # Default
     # 'DEFAULT_RENDERER_CLASSES': [
     #     'core.utils.CustomJSONRenderer',
     #     'rest_framework.renderers.BrowsableAPIRenderer',
@@ -220,6 +230,11 @@ SIMPLE_JWT = {
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_HEADERS = ["*"]
 CORS_ALLOW_CREDENTIALS = True
+CSRF_TRUSTED_ORIGINS = [
+    "localhost:3000",
+    "localhost:8000",
+    "https://reservation-backend-jaxt.onrender.com/",
+]
 # CORS_ALLOW_METHODS = (
 #     "DELETE",
 #     "GET",
