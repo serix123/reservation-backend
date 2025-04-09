@@ -225,7 +225,7 @@ SIMPLE_JWT = {
 ALLOWED_HOSTS = ["*"]
 # For Production
 CORS_ORIGIN_WHITELIST = [
-    "https://reservation-backend-jaxt.onrender.com/",
+    "https://reservation-backend-jaxt.onrender.com",
     "http://localhost:3000",
     "http://localhost:8000",
     "http://localhost:8080",
@@ -237,7 +237,7 @@ CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:8000",
-    "https://reservation-backend-jaxt.onrender.com/",
+    "https://reservation-backend-jaxt.onrender.com",
 ]
 # CORS_ALLOW_METHODS = (
 #     "DELETE",
