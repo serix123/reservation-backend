@@ -11,3 +11,5 @@ pylint-django
 pylint-plugin-utils
 Pillow
 django-filter
+python-dotenv
+psycopg2

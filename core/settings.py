@@ -13,6 +13,10 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from datetime import timedelta
 from pathlib import Path
 import os
+from dotenv import load_dotenv
+
+load_dotenv()  # Load environment variables from .env
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,7 +29,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-xm@^q0lyx7am^jl$9_1jtqk((&uyzzjt@_c44g+deqqmnh1149"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = (
+    os.getenv("DEBUG", "True").lower() == "true"
+)  # example of using environment variables for other settings.
+
 
 ALLOWED_HOSTS = ["*"]
 
@@ -119,6 +126,18 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+if not DEBUG:  # production settings.
+    # load_dotenv(".env.production")  # load production environment variables.
+    DATABASES = {
+        "default": {
+            "ENGINE": os.getenv("DATABASE_ENGINE", "django.db.backends.sqlite3"),
+            "NAME": os.getenv("DATABASE_NAME", "db.sqlite3"),
+            "USER": os.getenv("DATABASE_USER"),
+            "PASSWORD": os.getenv("DATABASE_PASSWORD"),
+            "HOST": os.getenv("DATABASE_HOST"),
+            "PORT": os.getenv("DATABASE_PORT"),
+        }
+    }
 
 
 # DATABASES = {
