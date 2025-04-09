@@ -24,6 +24,7 @@ api_paths = [
     path("reservation/", include("reservation.urls")),
     # Added Residents API
     path("residence/", include("residence.urls")),
+    path("medlogix/", include("medilab.urls")),
 ]
 
 urlpatterns = [

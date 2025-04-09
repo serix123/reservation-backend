@@ -1,60 +1,117 @@
 from rest_framework import serializers
-from medilab.models import Patient
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+import base64
+from medilab.models import PatientProfile, PatientProfileApplication
+
+User = get_user_model()
 
 
-class PatientSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the Patient model to handle data conversion 
-    between complex data types and Python/JSON representations.
-    """
-    # Optional: Add custom fields or validation
-    full_name = serializers.SerializerMethodField()
-    age = serializers.SerializerMethodField()
+class PatientProfileSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(source="user.email", read_only=True)
+    first_name = serializers.CharField(source="user.first_name", read_only=True)
+    last_name = serializers.CharField(source="user.last_name", read_only=True)
 
     class Meta:
-        model = Patient
+        model = PatientProfile
         fields = [
-            'id',
-            'user',
-            'first_name',
-            'last_name',
-            'full_name',
-            'birthdate',
-            'gender',
-            'address',
-            'age',
-            'email',
-            'phone_number',
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "date_of_birth",
+            "address",
+            "village",
+            "medical_history",
+            "approved_by",
+            "approval_date",
+            "created_at",
         ]
-        extra_kwargs = {
-            'user': {'required': False}  # Make user optional in serialization
+        read_only_fields = ["approved_by", "approval_date"]
+
+
+class Base64ImageField(serializers.Field):
+    def to_representation(self, value):
+        if not value:
+            return None
+        return {"filename": value.id_proof_filename, "data": value.id_proof_base64}
+
+    def to_internal_value(self, data):
+        if isinstance(data, dict):
+            return {
+                "id_proof_base64": data.get("data"),
+                "id_proof_filename": data.get("filename"),
+            }
+        return {
+            "id_proof_base64": data,
+            "id_proof_filename": "id_proof.jpg",  # Default filename
         }
 
-    def get_full_name(self, obj):
-        """
-        Custom method to generate full name dynamically.
-        """
-        return f"{obj.first_name} {obj.last_name}"
 
-    def get_age(self, obj):
-        """
-        Calculate patient's age based on birthdate.
-        """
-        from datetime import date
-        today = date.today()
-        return today.year - obj.birthdate.year - (
-            (today.month, today.day) < (obj.birthdate.month, obj.birthdate.day)
-        )
+class PatientProfileApplicationSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(source="user.email", read_only=True)
+    first_name = serializers.CharField(source="user.first_name", read_only=True)
+    last_name = serializers.CharField(source="user.last_name", read_only=True)
+    id_proof = Base64ImageField(source="*")
 
-    def create(self, validated_data):
-        """
-        Custom create method to handle potential user context.
-        """
-        # If no user provided, try to get from request context
-        user = validated_data.pop('user', None)
-        if not user and hasattr(self, '_user'):
-            user = self._user
+    class Meta:
+        model = PatientProfileApplication
+        fields = [
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "date_of_birth",
+            "address",
+            "village",
+            "id_proof",
+            "medical_history",
+            "status",
+            "reviewed_by",
+            "review_date",
+            "created_at",
+        ]
+        read_only_fields = ["status", "reviewed_by", "review_date", "user"]
 
-        patient = Patient.objects.create(user=user, **validated_data)
-        return patient
+
+class PatientProfileApplicationCreateSerializer(serializers.ModelSerializer):
+    id_proof = Base64ImageField(source="*", required=True)
+
+    class Meta:
+        model = PatientProfileApplication
+        fields = ["date_of_birth", "address", "village", "id_proof", "medical_history"]
+
+
+class ApplicationReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PatientProfileApplication
+        fields = ["status"]
+
+    def update(self, instance, validated_data):
+        request = self.context.get("request")
+        if not request or not request.user.is_staff:
+            raise serializers.ValidationError("Only staff can review applications")
+
+        new_status = validated_data.get("status")
+
+        if new_status == "approved":
+            instance.approve(request.user)
+        elif new_status == "rejected":
+            instance.reject(request.user)
+        else:
+            raise serializers.ValidationError("Invalid status")
+
+        return instance
+
+
+# NEW SERIALIZER FOR UPDATE REQUESTS:
+class PatientProfileUpdateSerializer(serializers.ModelSerializer):
+    """Special serializer that creates update applications instead of direct updates"""
+
+    class Meta:
+        model = PatientProfile
+        fields = ["date_of_birth", "address", "village", "medical_history"]
+
+    def update(self, instance, validated_data):
+        # OVERRIDDEN: Creates update application instead of updating directly
+        instance.create_update_application(validated_data)
+        return instance  # Still return instance (though it wasn't modified)

@@ -1,112 +1,142 @@
 from django.db import models
-from authentication.models import User
-from django.core.validators import EmailValidator, RegexValidator
+from django.conf import settings
+from django.utils import timezone
 
 
-class Patient(models.Model):
-    """
-    Model representing a patient in the medical management system.
+class PatientProfile(models.Model):
+    """The actual approved patient profile"""
 
-    This model captures essential patient demographic information 
-    and uses Django's built-in User model for authentication and 
-    user-related details.
-    """
-    # Primary Key is automatically created by Django as 'id'
-
-    # Foreign Key to Django's User model for authentication and user details
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,  # If user is deleted, patient record is also deleted
-        related_name='patients',   # Allows reverse lookup from User to Patient
-        null=True,                 # Allow patients without a user account
-        blank=True                 # Make the field optional in forms
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="patient_profile",
     )
-
-    # Patient's personal information
-    first_name = models.CharField(
-        max_length=100,
-        help_text="Patient's first name"
-    )
-
-    last_name = models.CharField(
-        max_length=100,
-        help_text="Patient's last name"
-    )
-
-    # Using DateField for birthdate to store the exact date of birth
-    birthdate = models.DateField(
-        help_text="Patient's date of birth"
-    )
-
-    # Predefined choices for gender to ensure data consistency
-    GENDER_CHOICES = [
-        ('M', 'Male'),
-        ('F', 'Female'),
-        ('O', 'Other'),
-        ('N', 'Prefer Not to Say')
-    ]
-
-    gender = models.CharField(
-        max_length=1,
-        choices=GENDER_CHOICES,
-        default='N',
-        help_text="Patient's gender"
-    )
-
-    # Comprehensive address field
-    address = models.TextField(
-        help_text="Patient's full address",
-        blank=True,  # Optional address field
-        null=True
-    )
-
-    # Email field with validation
-    email = models.EmailField(
-        unique=True,
-        validators=[EmailValidator()],
-        help_text="Patient's primary email address",
-        blank=True,
-        null=True
-    )
-
-    # Optional phone number with validation
-    phone_regex = RegexValidator(
-        regex=r'^\+?1?\d{9,15}$',
-        message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed."
-    )
-    phone_number = models.CharField(
-        validators=[phone_regex],
-        max_length=17,
-        blank=True,
+    date_of_birth = models.DateField()
+    address = models.TextField()
+    village = models.CharField(max_length=100)
+    medical_history = models.TextField(blank=True, null=True)
+    approved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
         null=True,
-        help_text="Patient's primary contact number"
+        blank=True,
+        related_name="approved_profiles",
     )
-
-    # Metadata and utility methods
-    class Meta:
-        verbose_name = 'Patient'
-        verbose_name_plural = 'Patients'
-        # Optional: Add index on frequently searched fields
-        indexes = [
-            models.Index(fields=['last_name', 'first_name']),
-        ]
-        constraints = [
-            models.UniqueConstraint(
-                fields=['email'],
-                name='unique_patient_email',
-                condition=models.Q(email__isnull=False)
-            )
-        ]
+    approval_date = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        """
-        String representation of the Patient model.
-        Useful for admin interface and debugging.
-        """
-        return f"{self.first_name} {self.last_name}"
+        return f"{self.user.first_name} {self.user.last_name}"
 
-    def get_full_name(self):
-        """
-        Convenience method to get the patient's full name.
-        """
-        return f"{self.first_name} {self.last_name}"
+    def create_update_application(self, changed_data=None):
+        """Create an application for updating this profile"""
+        if changed_data is None:
+            changed_data = {}
+
+        return PatientProfileApplication.objects.create(
+            user=self.user,
+            date_of_birth=changed_data.get("date_of_birth", self.date_of_birth),
+            address=changed_data.get("address", self.address),
+            village=changed_data.get("village", self.village),
+            medical_history=changed_data.get("medical_history", self.medical_history),
+            id_proof_base64=changed_data.get("id_proof_base64", ""),
+            id_proof_filename=changed_data.get("id_proof_filename", "update_request"),
+            status="pending",
+            is_update=True,
+            existing_profile=self,
+        )
+
+    class Meta:
+        ordering = ["-created_at"]
+
+
+class PatientProfileApplication(models.Model):
+    """Application for patient profile that needs approval"""
+
+    APPROVAL_STATUS = (
+        ("pending", "Pending Approval"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+    )
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="profile_applications",
+    )
+    date_of_birth = models.DateField()
+    address = models.TextField()
+    village = models.CharField(max_length=100)
+    id_proof_base64 = models.TextField()  # Stores base64 encoded image
+    id_proof_filename = models.CharField(max_length=255)  # Original filename
+    medical_history = models.TextField(blank=True, null=True)
+    status = models.CharField(max_length=20, choices=APPROVAL_STATUS, default="pending")
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="reviewed_applications",
+    )
+    review_date = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    # NEW FIELDS FOR UPDATE WORKFLOW:
+    existing_profile = models.ForeignKey(
+        PatientProfile,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="update_applications",
+    )
+    is_update = models.BooleanField(
+        default=False
+    )  # Tracks if this is an update request
+
+    def __str__(self):
+        return f"Application from {self.user.first_name} {self.user.last_name}"
+
+    # UPDATED APPROVAL METHOD:
+    def approve(self, approved_by):
+        """Approve this application - now handles both new and update cases"""
+        if self.is_update and self.existing_profile:
+            # UPDATE CASE: Apply changes to existing profile
+            profile = self.existing_profile
+            profile.date_of_birth = self.date_of_birth
+            profile.address = self.address
+            profile.village = self.village
+            profile.medical_history = self.medical_history
+            profile.approved_by = approved_by
+            profile.approval_date = timezone.now()
+            profile.save()
+        else:
+            # NEW PROFILE CASE: Original creation logic
+            PatientProfile.objects.create(
+                user=self.user,
+                date_of_birth=self.date_of_birth,
+                address=self.address,
+                village=self.village,
+                medical_history=self.medical_history,
+                approved_by=approved_by,
+            )
+
+        self.delete()  # Delete application after approval
+        return True
+
+        # Delete the application after successful profile creation
+        self.delete()
+
+        return True
+
+    def reject(self, rejected_by):
+        """Reject this application - we'll keep it for record-keeping"""
+        self.status = "rejected"
+        self.reviewed_by = rejected_by
+        self.review_date = timezone.now()
+        self.save()
+        return True
+
+    class Meta:
+        ordering = ["-created_at"]

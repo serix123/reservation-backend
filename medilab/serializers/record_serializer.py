@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from medilab.models import MedicalRecord
-from medilab.serializers import PatientSerializer
+from medilab.serializers import PatientProfileSerializer
 
 
 class MedicalRecordSerializer(serializers.ModelSerializer):
@@ -9,10 +9,7 @@ class MedicalRecordSerializer(serializers.ModelSerializer):
     and provide additional context.
     """
     # Optional: Include patient details
-    patient_details = PatientSerializer(
-        source='patient',
-        read_only=True
-    )
+    patient_details = PatientProfileSerializer(source="patient", read_only=True)
 
     # Optional: Custom doctor name retrieval
     doctor_name = serializers.SerializerMethodField()
