@@ -21,11 +21,9 @@ load_dotenv()  # Load environment variables from .env
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-STATIC_URL = "static/"
-STATIC_ROOT = os.path.join(
-    BASE_DIR, "staticfiles"
-)  # this is where collectstatic will gather all static files.
 
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATIC_URL = "/static/"
 # STATICFILES_DIRS = [
 #     os.path.join(
 #         BASE_DIR, "static"
