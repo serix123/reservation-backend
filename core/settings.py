@@ -224,7 +224,12 @@ SIMPLE_JWT = {
 
 ALLOWED_HOSTS = ["*"]
 # For Production
-CORS_ORIGIN_WHITELIST = "https://reservation-backend-jaxt.onrender.com/"
+CORS_ORIGIN_WHITELIST = [
+    "https://reservation-backend-jaxt.onrender.com/",
+    "http://localhost:3000",
+    "http://localhost:8000",
+    "http://localhost:8080",
+]
 # Allow all only for testing
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_HEADERS = ["*"]
