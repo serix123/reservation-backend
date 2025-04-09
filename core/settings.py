@@ -44,8 +44,6 @@ DEBUG = (
 )  # example of using environment variables for other settings.
 
 
-ALLOWED_HOSTS = ["*"]
-
 # Base directory for media files
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 # URL to access media files
@@ -224,8 +222,10 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
 }
 
+
+ALLOWED_HOSTS = ["*"]
 # For Production
-# CORS_ORIGIN_WHITELIST = ("http://localhost:8000", "https://Your frontend host")
+CORS_ORIGIN_WHITELIST = "https://reservation-backend-jaxt.onrender.com/"
 # Allow all only for testing
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_HEADERS = ["*"]
