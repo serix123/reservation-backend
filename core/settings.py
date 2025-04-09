@@ -231,8 +231,8 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_HEADERS = ["*"]
 CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
-    "localhost:3000",
-    "localhost:8000",
+    "http://localhost:3000",
+    "http://localhost:8000",
     "https://reservation-backend-jaxt.onrender.com/",
 ]
 # CORS_ALLOW_METHODS = (
