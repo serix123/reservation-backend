@@ -21,10 +21,11 @@ class UserSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "email",
+            'is_staff', 'is_superuser',
             "password",
             "password2",
         )
-        read_only_fields = ['is_staff', 'is_admin']
+        read_only_fields = ['is_staff', 'is_superuser']
         extra_kwargs = {
             "password": {"required": False, "write_only": True},
             "password2": {"required": False, "write_only": True},

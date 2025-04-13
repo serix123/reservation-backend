@@ -133,3 +133,21 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
             is_staff=False,
             is_superuser=False
         )
+
+
+class UserListViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Simple viewset to return basic user information
+    """
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Only return the requesting user's data
+        return User.objects.filter(id=self.request.user.id)
+
+    @action(detail=False, methods=['get'])
+    def me(self, request):
+        """Convenience endpoint for getting current user's info"""
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)

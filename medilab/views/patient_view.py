@@ -53,11 +53,13 @@ class PatientProfileViewSet(viewsets.ModelViewSet):
         """Handle profile updates by creating/modifying the single application"""
         partial = kwargs.pop("partial", False)
         instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer = self.get_serializer(
+            instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
 
         try:
-            application = instance.create_update_application(serializer.validated_data)
+            application = instance.create_update_application(
+                serializer.validated_data)
             return Response(
                 {
                     "detail": "Application updated successfully",
@@ -73,6 +75,53 @@ class PatientProfileViewSet(viewsets.ModelViewSet):
     def perform_create_application(self, instance, validated_data):
         """Helper method to create the update application"""
         instance.create_update_application(validated_data)
+
+    # @action(detail=False, methods=['get'])
+    # def my_profile(self, request):
+    #     """Endpoint for users to view their own profile"""
+    #     try:
+    #         # Get the profile for the currently authenticated user
+    #         profile = PatientProfile.objects.get(user=request.user)
+    #         serializer = self.get_serializer(profile)
+    #         return Response(serializer.data)
+    #     except PatientProfile.DoesNotExist:
+    #         return Response(
+    #             {'detail': 'Profile not found'},
+    #             status=status.HTTP_404_NOT_FOUND
+    #         )
+    @action(detail=False, methods=['get'])
+    def my_profile(self, request):
+        """Endpoint for users to view their profile or pending application"""
+        try:
+            # First try to get approved profile
+            profile = PatientProfile.objects.get(user=request.user)
+            serializer = self.get_serializer(profile)
+            return Response({
+                'status': 'approved',
+                'profile': serializer.data
+            })
+        except PatientProfile.DoesNotExist:
+            # Check for pending application
+            application = PatientProfileApplication.objects.filter(
+                user=request.user,
+                status='pending'
+            ).first()
+
+            if application:
+                serializer = PatientProfileApplicationSerializer(application)
+                return Response({
+                    'status': 'pending',
+                    'application': serializer.data,
+                    'message': 'Your profile application is pending approval'
+                })
+
+            return Response(
+                {
+                    'status': 'not_found',
+                    'message': 'No profile or pending application found'
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 
 class PatientProfileApplicationViewSet(viewsets.ModelViewSet):
@@ -158,7 +207,8 @@ class PatientProfileApplicationViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["get"], permission_classes=[permissions.IsAdminUser])
     def pending(self, request):
         """List all pending applications (staff only)"""
-        pending_apps = PatientProfileApplication.objects.filter(status="pending")
+        pending_apps = PatientProfileApplication.objects.filter(
+            status="pending")
         serializer = self.get_serializer(pending_apps, many=True)
         return Response(serializer.data)
 
