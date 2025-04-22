@@ -1,15 +1,11 @@
 from django.utils import timezone
 from rest_framework import serializers
 from authentication.models import User
-from reservation.models import Employee
-from residence.models import Residence
 
 DEFAULT_PASSWORD = 'pnMGgxsG1P3MKGk'
 
 
 class UserSerializer(serializers.ModelSerializer):
-
-    # employee = EmployeeSerializer(required=False)
     password = serializers.CharField(required=False, allow_null=True,
                                      style={"input_type": "password"}, write_only=True)
     password2 = serializers.CharField(required=False, allow_null=True,
@@ -57,22 +53,6 @@ class UserSerializer(serializers.ModelSerializer):
             email=self.validated_data["email"],
             password=password,
         )
-
-        # Residence.objects.create(
-        #     user=user,
-        #     first_name=self.validated_data["first_name"],
-        #     last_name=self.validated_data["last_name"],
-        #     role=Residence.Role.RESIDENT
-        # )
-
-        # employee_data = self.validated_data.pop("employee", {})
-        # Employee.objects.create(
-        #     user=user,
-        #     first_name=self.validated_data["first_name"],
-        #     last_name=self.validated_data["last_name"],
-        #     **employee_data
-        # )
-
         return user
 
     def create_superuser(self):
@@ -89,47 +69,10 @@ class UserSerializer(serializers.ModelSerializer):
             email=self.validated_data["email"],
             password=password,
         )
-
-        employee_data = self.validated_data.pop("employee", {})
-        Employee.objects.create(
-            user=user,
-            first_name=self.validated_data["first_name"],
-            last_name=self.validated_data["last_name"],
-            **employee_data
-        )
-
-        return user
-
-    def create_employee_and_assign(self):
-        password = self.validated_data.pop("password")
-        password2 = self.validated_data.pop("password2")
-
-        if password != password2:
-            raise serializers.ValidationError(
-                {"password": "Passwords must match"})
-
-        user = User.objects.create_user(
-            first_name=self.validated_data["first_name"],
-            last_name=self.validated_data["last_name"],
-            email=self.validated_data["email"],
-            password=password,
-        )
-        # Access the requesting user from the serializer context
-        registering_user = self.context['request'].user.employee
-        employee_data = self.validated_data.pop("employee", {})
-        Employee.objects.create(
-            user=user,
-            first_name=self.validated_data["first_name"],
-            last_name=self.validated_data["last_name"],
-            immediate_head=registering_user,
-            department=registering_user.department,
-            **employee_data
-        )
-
         return user
 
 
-class ResidentRegistrationSerializer(serializers.ModelSerializer):
+class RegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
     class Meta:
@@ -147,11 +90,6 @@ class ResidentRegistrationSerializer(serializers.ModelSerializer):
             password=validated_data['password'],
             is_staff=False,
             is_superuser=False
-        )
-        Residence.objects.create(
-            user=user,
-            role='Resident',
-            registration_date=timezone.now().date()
         )
         return user
 
@@ -201,19 +139,19 @@ class AdminUserUpdateSerializer(serializers.ModelSerializer):
                 "You cannot modify your own permissions")
         return attrs
 
-    def update(self, instance, validated_data):
-        residence_data = validated_data.pop('residence', {})
+    # def update(self, instance, validated_data):
+    #     residence_data = validated_data.pop('residence', {})
 
-        # Update user permissions
-        instance = super().update(instance, validated_data)
+    #     # Update user permissions
+    #     instance = super().update(instance, validated_data)
 
-        # Update residence information
-        residence = instance.residence
-        for key, value in residence_data.items():
-            setattr(residence, key, value)
-        residence.save()
+    #     # Update residence information
+    #     residence = instance.residence
+    #     for key, value in residence_data.items():
+    #         setattr(residence, key, value)
+    #     residence.save()
 
-        return instance
+    #     return instance
 
 
 class UserWithResidenceSerializer(serializers.ModelSerializer):

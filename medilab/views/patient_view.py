@@ -1,229 +1,165 @@
-from rest_framework import viewsets, permissions, status, serializers
+from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.filters import OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
-from core.filters import SmartSearchFilter
 from django.contrib.auth import get_user_model
-from medilab.models import PatientProfile, PatientProfileApplication
-from medilab.serializers import (
-    PatientProfileSerializer,
-    PatientProfileApplicationSerializer,
-    PatientProfileApplicationCreateSerializer,
-    ApplicationReviewSerializer,
-    PatientProfileUpdateSerializer,
-)
-
+from core.filters import SmartSearchFilter
+from medilab.models import Patient
+from medilab.permissions import IsOwnerOrStaff
+from medilab.serializers import PatientSerializer
 
 User = get_user_model()
 
 
-class PatientProfileViewSet(viewsets.ModelViewSet):
-    """Viewset for approved patient profiles (read-only)"""
+class PatientViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for Patient model with custom actions for verification status management.
+    """
 
-    queryset = PatientProfile.objects.all()
-    permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [
-        DjangoFilterBackend,
-        SmartSearchFilter,
-        OrderingFilter,
-    ]
-    search_fields = [
-        "user__first_name",
-        "user__last_name",
-        "village",
-        "address",
-    ]
-    ordering_fields = ["created_at", "approval_date"]
-    ordering = ["-created_at"]  # Default ordering
-
-    def get_queryset(self):
-        queryset = PatientProfile.objects.all()
-        if not self.request.user.is_staff:
-            queryset = queryset.filter(user=self.request.user)
-        return queryset
-
-    # NEW SERIALIZER SELECTION:
-    def get_serializer_class(self):
-        if self.action in ["update", "partial_update"]:
-            return PatientProfileUpdateSerializer  # Use special serializer for updates
-        return PatientProfileSerializer
-
-    def update(self, request, *args, **kwargs):
-        """Handle profile updates by creating/modifying the single application"""
-        partial = kwargs.pop("partial", False)
-        instance = self.get_object()
-        serializer = self.get_serializer(
-            instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-
-        try:
-            application = instance.create_update_application(
-                serializer.validated_data)
-            return Response(
-                {
-                    "detail": "Application updated successfully",
-                    "application_id": application.id,
-                    "status": application.status,
-                    "is_update": application.is_update,
-                },
-                status=status.HTTP_200_OK,
-            )
-        except Exception as e:
-            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-    def perform_create_application(self, instance, validated_data):
-        """Helper method to create the update application"""
-        instance.create_update_application(validated_data)
-
-    # @action(detail=False, methods=['get'])
-    # def my_profile(self, request):
-    #     """Endpoint for users to view their own profile"""
-    #     try:
-    #         # Get the profile for the currently authenticated user
-    #         profile = PatientProfile.objects.get(user=request.user)
-    #         serializer = self.get_serializer(profile)
-    #         return Response(serializer.data)
-    #     except PatientProfile.DoesNotExist:
-    #         return Response(
-    #             {'detail': 'Profile not found'},
-    #             status=status.HTTP_404_NOT_FOUND
-    #         )
-    @action(detail=False, methods=['get'])
-    def my_profile(self, request):
-        """Endpoint for users to view their profile or pending application"""
-        try:
-            # First try to get approved profile
-            profile = PatientProfile.objects.get(user=request.user)
-            serializer = self.get_serializer(profile)
-            return Response({
-                'status': 'approved',
-                'profile': serializer.data
-            })
-        except PatientProfile.DoesNotExist:
-            # Check for pending application
-            application = PatientProfileApplication.objects.filter(
-                user=request.user,
-                status='pending'
-            ).first()
-
-            if application:
-                serializer = PatientProfileApplicationSerializer(application)
-                return Response({
-                    'status': 'pending',
-                    'application': serializer.data,
-                    'message': 'Your profile application is pending approval'
-                })
-
-            return Response(
-                {
-                    'status': 'not_found',
-                    'message': 'No profile or pending application found'
-                },
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-
-class PatientProfileApplicationViewSet(viewsets.ModelViewSet):
-    """Viewset for profile applications"""
-
-    queryset = PatientProfileApplication.objects.all()
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrStaff]
+    queryset = Patient.objects.all()
+    serializer_class = PatientSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SmartSearchFilter, OrderingFilter]
-    search_fields = [
-        "user__first_name",
-        "user__last_name",
-        "village",
-        "address",
-        "status",
+    filterset_fields = [
+        "verification_status",
+        "gender",
     ]
-    filterset_fields = ["status", "is_update"]
-    ordering_fields = ["created_at", "review_date"]
-    ordering = ["-created_at"]  # Default ordering
+    search_fields = [
+        "first_name",
+        "last_name",
+        "address",
+    ]
 
-    def get_serializer_class(self):
-        if self.action == "create":
-            return PatientProfileApplicationCreateSerializer
-        elif self.action in ["approve", "reject"]:
-            return ApplicationReviewSerializer
-        return PatientProfileApplicationSerializer
+    def get_queryset(self):
+        """
+        Restrict queryset based on user permissions:
+        - Staff users see all patients
+        - Regular users only see their own patient profile
+        """
+        if self.request.user.is_staff:
+            return Patient.objects.all()
+        return Patient.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        """Handle application creation ensuring single application per user"""
-        if self.request.user.is_staff:
-            raise permissions.PermissionDenied(
-                "Staff cannot create profile applications"
-            )
+        """Automatically associate the patient with the current user on creation."""
+        serializer.save(user=self.request.user)
 
-        # This will now either create or update the single application
-        try:
-            if hasattr(self.request.user, "patient_profile"):
-                profile = self.request.user.patient_profile
-                profile.create_update_application(serializer.validated_data)
-            else:
-                serializer.save(user=self.request.user, status="pending")
-        except Exception as e:
-            raise serializers.ValidationError(str(e))
+    def update(self, request, *args, **kwargs):
+        """
+        Handle patient updates with special handling for file uploads.
+        - Prevents non-staff from modifying verification_status
+        - Handles file deletion/replacement for id_document
+        """
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
 
-    @action(
-        detail=True, methods=["patch"], permission_classes=[permissions.IsAdminUser]
-    )
-    def approve(self, request, pk=None):
-        """Staff-only action to approve an application"""
-        application = self.get_object()
-        if application.status != "pending":
-            return Response(
-                {"detail": "Only pending applications can be approved"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        # Remove verification_status from data if user is not staff
+        if not request.user.is_staff and "verification_status" in request.data:
+            request.data.pop("verification_status")
 
-        try:
-            application.approve(request.user)
-            return Response(
-                {"detail": "Application approved and archived"},
-                status=status.HTTP_200_OK,
-            )
-        except Exception as e:
-            return Response(
-                {"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        # Handle file upload
+        id_document = request.FILES.get("id_document")
+        if id_document:
+            # Delete old file if exists
+            if instance.id_document:
+                instance.id_document.delete(save=False)
+            instance.id_document = id_document
+            # Automatically set status to pending when document is uploaded
+            instance.verification_status = "pending"
+            instance.save()
 
-    @action(
-        detail=True, methods=["patch"], permission_classes=[permissions.IsAdminUser]
-    )
-    def reject(self, request, pk=None):
-        """Staff-only action to reject an application"""
-        application = self.get_object()
-        serializer = self.get_serializer(
-            application,
-            data={"status": "rejected"},
-            partial=True,
-            context={"request": request},
-        )
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        self.perform_update(serializer)
+
         return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        """Handle patient deletion with cleanup of associated files."""
+        instance = self.get_object()
+        # Delete associated file when patient is deleted
+        if instance.id_document:
+            instance.id_document.delete(save=False)
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    # Custom actions for verification status management
+    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAdminUser])
+    def verify(self, request, pk=None):
+        """
+        Custom action to mark patient as verified (staff only).
+        Endpoint: /patients/{pk}/verify/
+        """
+        patient = self.get_object()
+        patient.verification_status = "verified"
+        patient.save()
+        return Response({"status": "patient verified"})
+
+    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAdminUser])
+    def reject(self, request, pk=None):
+        """
+        Custom action to mark patient as rejected (staff only).
+        Endpoint: /patients/{pk}/reject/
+        """
+        patient = self.get_object()
+        patient.verification_status = "rejected"
+        patient.save()
+        return Response({"status": "patient rejected"})
+
+    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAdminUser])
+    def reset_verification(self, request, pk=None):
+        """
+        Custom action to reset verification status to pending (staff only).
+        Endpoint: /patients/{pk}/reset_verification/
+        """
+        patient = self.get_object()
+        patient.verification_status = "pending"
+        patient.save()
+        return Response({"status": "verification reset to pending"})
 
     @action(detail=False, methods=["get"], permission_classes=[permissions.IsAdminUser])
     def pending(self, request):
-        """List all pending applications (staff only)"""
-        pending_apps = PatientProfileApplication.objects.filter(
-            status="pending")
-        serializer = self.get_serializer(pending_apps, many=True)
+        """
+        Custom action to list patients pending verification (staff only).
+        Endpoint: /patients/pending/
+        """
+        pending_patients = Patient.objects.filter(verification_status="pending")
+        serializer = self.get_serializer(pending_patients, many=True)
         return Response(serializer.data)
 
-    # NEW ACTION ENDPOINT:
-    @action(detail=False, methods=["get"])
-    def my_updates(self, request):
-        """New endpoint to view pending update requests"""
-        if request.user.is_staff:
-            queryset = PatientProfileApplication.objects.filter(
-                is_update=True, status="pending"
-            )
-        else:
-            queryset = PatientProfileApplication.objects.filter(
-                user=request.user, is_update=True, status="pending"
+    @action(detail=False, methods=["get"], permission_classes=[permissions.IsAdminUser])
+    def unverified(self, request):
+        """
+        Custom action to list patients unverified (staff only).
+        Endpoint: /patients/unverified/
+        """
+        unverified_patients = Patient.objects.filter(verification_status="unverified")
+        serializer = self.get_serializer(unverified_patients, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["put", "patch"], permission_classes=[IsOwnerOrStaff])
+    def upload_id_document(self, request, pk=None):
+        """
+        Dedicated endpoint for uploading/replacing ID document
+        Endpoint: /patients/{pk}/upload_id_document/
+        Methods: PUT (replace), PATCH (update)
+        """
+        patient = self.get_object()
+
+        if "id_document" not in request.FILES:
+            return Response(
+                {"error": "No file provided"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        serializer = self.get_serializer(queryset, many=True)
+        # Delete old file if exists
+        if patient.id_document:
+            patient.id_document.delete(save=False)
+
+        # Save new file
+        patient.id_document = request.FILES["id_document"]
+        patient.save()
+
+        serializer = self.get_serializer(patient)
         return Response(serializer.data)

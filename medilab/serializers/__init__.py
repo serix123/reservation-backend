@@ -1,8 +1,2 @@
-from .patient_serializer import (
-    PatientProfileSerializer,
-    PatientProfileApplicationSerializer,
-    PatientProfileApplicationCreateSerializer,
-    ApplicationReviewSerializer,
-    PatientProfileUpdateSerializer,
-)
+from .patient_serializer import PatientSerializer, PatientVerificationSerializer
 from .record_serializer import MedicalRecordSerializer

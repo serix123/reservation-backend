@@ -1,7 +1,0 @@
-from .approval_serializer import ApprovalSerializer
-from .department_serializer import DepartmentSerializer
-from .employee_serializer import EmployeeSerializer, EmployeeDepartmentUpdateSerializer
-from .equipment_serializer import EquipmentSerializer
-from .event_serializer import EventSerializer
-from .facility_serializer import FacilitySerializer
-from .notification_serializer import NotificationSerializer

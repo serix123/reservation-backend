@@ -1,12 +1,10 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from medilab.views import PatientProfileViewSet, PatientProfileApplicationViewSet
+from medilab.views import PatientViewSet
 
 router = DefaultRouter()
-router.register(r"profiles", PatientProfileViewSet, basename="patient-profile")
-router.register(
-    r"applications", PatientProfileApplicationViewSet, basename="patient-application"
-)
+router.register(r"patients", PatientViewSet, basename="patient")
+
 
 urlpatterns = [
     path("", include(router.urls)),

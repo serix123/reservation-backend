@@ -1,2 +1,2 @@
-from .patient_model import PatientProfile, PatientProfileApplication
+from .patient_model import Patient
 from .record_model import MedicalRecord

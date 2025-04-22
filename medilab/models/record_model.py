@@ -1,6 +1,6 @@
 from django.db import models
 from authentication.models import User
-from medilab.models import PatientProfile
+from medilab.models import Patient
 
 
 class MedicalRecord(models.Model):
@@ -15,7 +15,7 @@ class MedicalRecord(models.Model):
 
     # Foreign Key to Patient model
     patient = models.ForeignKey(
-        PatientProfile,
+        Patient,
         on_delete=models.CASCADE,
         related_name="medical_records",
         help_text="Patient associated with this medical record",
