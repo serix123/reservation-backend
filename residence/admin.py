@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils import timezone
-from residence.models import (Residence, Visitor, Event, Issue)
+from residence.models import (Residence, Visitor, Event, Issue, CommunityResource)
 
 
 class ResidenceAdmin(admin.ModelAdmin):
@@ -99,6 +99,14 @@ class EventAdmin(admin.ModelAdmin):
     send_event_reminders.short_description = "Send reminders for selected events"
 
 
+class CommunityResourceAdmin(admin.ModelAdmin):
+    list_display = ["name", "resource_type", "status", "managed_by"]
+    search_fields = ["name", "managed_by__email"]
+    list_filter = ["resource_type", "status"]
+    readonly_fields = ["created_at", "updated_at"]
+
+
+admin.site.register(CommunityResource, CommunityResourceAdmin)
 admin.site.register(Residence, ResidenceAdmin)
 admin.site.register(Visitor, VisitorAdmin)
 admin.site.register(Issue, IssueAdmin)

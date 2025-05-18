@@ -1,4 +1,5 @@
 from django.contrib import admin
+
 # from recurrence.forms import RecurrenceField
 from reservation.models import (
     Approval,
@@ -98,9 +99,19 @@ class EventEquipmentInline(admin.TabularInline):
 
 
 class EventAdmin(admin.ModelAdmin):
-    readonly_fields = ("id", "slip_number",)
-    list_display = ["id", "slip_number", "event_name", "requesitioner_name",
-                    "start_time", "end_time", "status"]
+    readonly_fields = (
+        "id",
+        "slip_number",
+    )
+    list_display = [
+        "id",
+        "slip_number",
+        "event_name",
+        "requesitioner_name",
+        "start_time",
+        "end_time",
+        "status",
+    ]
     list_filter = [
         "event_name",
         "requesitioner",
@@ -109,43 +120,57 @@ class EventAdmin(admin.ModelAdmin):
         "department",
         "start_time",
     ]
-    search_fields = ["slip_number",  "event_name",
-                     "requesitioner", "department"]
+    search_fields = ["slip_number", "event_name", "requesitioner", "department"]
 
     inlines = (EventEquipmentInline,)
 
     def save_model(self, request, obj, form, change):
-        if 'status' in form.changed_data and obj.status == 'application':
+        if "status" in form.changed_data and obj.status == "application":
             super().save_model(request, obj, form, change)
-            if not hasattr(obj, 'approval'):
-                Approval.objects.create(
-                    event=obj, requesitioner=obj.requesitioner)
+            if not hasattr(obj, "approval"):
+                Approval.objects.create(event=obj, requesitioner=obj.requesitioner)
         else:
             super().save_model(request, obj, form, change)
+
     # formfield_overrides = {
     #     RecurrenceField: {"widget": RecurrenceField.widget},
     # }
 
 
 class ApprovalAdmin(admin.ModelAdmin):
-    readonly_fields = ("id", "slip_number",
-                       'immediate_head_approver',
-                       'person_in_charge_approver',)
-    list_display = ["slip_number", "__str__", 'event', 'requesitioner', 'immediate_head_approver', 'person_in_charge_approver',
-                    'status', 'get_immediate_head_status', 'get_person_in_charge_status']
-    actions = ['make_approved']
+    readonly_fields = (
+        "id",
+        "slip_number",
+        "immediate_head_approver",
+        "person_in_charge_approver",
+    )
+    list_display = [
+        "slip_number",
+        "__str__",
+        "event",
+        "requesitioner",
+        "immediate_head_approver",
+        "person_in_charge_approver",
+        "status",
+        "get_immediate_head_status",
+        "get_person_in_charge_status",
+    ]
+    actions = ["make_approved"]
 
     def get_immediate_head_status(self, obj):
         return obj.immediate_head_approval
-    get_immediate_head_status.short_description = 'Immediate Head Status'
+
+    get_immediate_head_status.short_description = "Immediate Head Status"
 
     def get_person_in_charge_status(self, obj):
         return obj.person_in_charge_approval
-    get_person_in_charge_status.short_description = 'Person in Charge Status'
+
+    get_person_in_charge_status.short_description = "Person in Charge Status"
 
     def get_admin_status(self, obj):
         return obj.admin_approval
-    get_admin_status.short_description = 'Admin Status'
+
+    get_admin_status.short_description = "Admin Status"
 
     def make_approved(self, request, queryset):
         for approval in queryset:
@@ -154,6 +179,7 @@ class ApprovalAdmin(admin.ModelAdmin):
             approval.admin_approved = 1
             approval.check_if_approved()
             approval.save()
+
     make_approved.short_description = "Mark selected as approved"
 
 
@@ -168,10 +194,10 @@ class NotificationAdmin(admin.ModelAdmin):
     ordering = ["id"]
 
 
-admin.site.register(Notification, NotificationAdmin)
-admin.site.register(Approval, ApprovalAdmin)
-admin.site.register(Event, EventAdmin)
-admin.site.register(Equipment, EquipmentAdmin)
-admin.site.register(Facility, FacilityAdmin)
-admin.site.register(Employee, EmployeeAdmin)
-admin.site.register(Department, DepartmentAdmin)
+# admin.site.register(Notification, NotificationAdmin)
+# admin.site.register(Approval, ApprovalAdmin)
+# admin.site.register(Event, EventAdmin)
+# admin.site.register(Equipment, EquipmentAdmin)
+# admin.site.register(Facility, FacilityAdmin)
+# admin.site.register(Employee, EmployeeAdmin)
+# admin.site.register(Department, DepartmentAdmin)
