@@ -1,5 +1,7 @@
 from .resident_viewset import ResidenceViewSet
 from .visitor_viewset import VisitorViewSet
-from .issue_viewset import IssueViewSet
+from .issue_viewset import IssueViewSet, IssueCommentViewSet
 from .event_viewset import EventViewSet
 from .community_resources_viewset import CommunityResourceViewSet
+from .community_document_viewset import CommunityDocumentViewSet, DocumentCategoryViewSet
+from .community_notice_viewset import NoticeViewSet

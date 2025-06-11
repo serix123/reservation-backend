@@ -68,6 +68,22 @@ def update(request, pk):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_user_detail(request):
+    user = request.user
+    data = {
+        "id": user.id,
+        "email": user.email,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "is_staff": user.is_staff,
+        "is_superuser": user.is_superuser,
+        "groups": list(user.groups.values_list("name", flat=True)),
+    }
+    return Response(data)
+
+
 class ResidentRegistrationView(CreateAPIView):
     serializer_class = ResidentRegistrationSerializer
     permission_classes = [AllowAny]

@@ -1,2 +1,0 @@
-from .patient_view import PatientProfileViewSet, PatientProfileApplicationViewSet
-from .record_view import MedicalRecordViewSet

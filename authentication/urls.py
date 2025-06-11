@@ -1,14 +1,19 @@
 from django.urls import path, include
 from authentication.views.csv_views import upload_csv_create_users
 from authentication.views.token_views import MyTokenObtainPairView
+from authentication.views import (
+    user_views,
+    AdminUserViewSet,
+    UserViewSet,
+    UserListViewSet,
+)
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from authentication.views import user_views, AdminUserViewSet, UserViewSet, UserListViewSet
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
-router.register(r'admin/users', AdminUserViewSet, basename='admin-user')
-router.register(r'users', UserViewSet, basename='user')
-router.register(r'users-list', UserListViewSet, basename='user-list')
+router.register(r"admin/users", AdminUserViewSet, basename="admin-user")
+router.register(r"users", UserViewSet, basename="user")
+router.register(r"users-list", UserListViewSet, basename="user-list")
 
 token_paths = [
     path("", MyTokenObtainPairView.as_view(), name="token_obtain_pair"),
@@ -18,16 +23,23 @@ token_paths = [
 
 urlpatterns = [
     path("register/", user_views.register, name="user-registration"),
+    path("info/", user_views.get_user_detail, name="user-info"),
     path("delete/<str:pk>/", user_views.delete, name="user-delete"),
     path("update/<str:pk>/", user_views.update, name="user-update"),
-    path('upload-csv/', upload_csv_create_users,
-         name='upload_csv_create_users'),
+    path("upload-csv/", upload_csv_create_users, name="upload_csv_create_users"),
     path("register/admin/", user_views.register_admin, name="admin-registration"),
-    path("register/employee/", user_views.register_employee,
-         name="employee-registration"),
+    path(
+        "register/employee/", user_views.register_employee, name="employee-registration"
+    ),
     path("token/", include(token_paths)),
-    path('register/resident/', user_views.ResidentRegistrationView.as_view(),
-         name='register-resident'),
-    path('register/staff/', user_views.StaffRegistrationView.as_view(),
-         name='register-staff'),
+    path(
+        "register/resident/",
+        user_views.ResidentRegistrationView.as_view(),
+        name="register-resident",
+    ),
+    path(
+        "register/staff/",
+        user_views.StaffRegistrationView.as_view(),
+        name="register-staff",
+    ),
 ] + router.urls

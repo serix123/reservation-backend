@@ -1,6 +1,9 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from residence.models import Event
-from authentication.models import User
+from residence.permissions import IsOfficer
+
+User = get_user_model()
 
 
 class EventSerializer(serializers.ModelSerializer):
@@ -8,12 +11,16 @@ class EventSerializer(serializers.ModelSerializer):
     attendees_count = serializers.IntegerField(read_only=True)
     is_attending = serializers.SerializerMethodField()
 
+    # We will conditionally add 'attendees_list' in to_representation
+    # attendees_list = serializers.StringRelatedField(many=True, read_only=True) # Could predefine but easier to add dynamically
+
     class Meta:
         model = Event
         fields = [
             "id",
             "name",
             "date",
+            "status",
             "details",
             "location",
             "creator",
@@ -24,6 +31,7 @@ class EventSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = [
+            "id",
             "creator",
             "creator_name",
             "attendees_count",
@@ -33,35 +41,59 @@ class EventSerializer(serializers.ModelSerializer):
         ]
 
     def get_is_attending(self, obj):
-        user = self.context["request"].user
-        return user.is_authenticated and user in obj.attendees.all()
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return request.user in obj.attendees.all()
+        return False
+
+    def to_representation(self, instance):
+        """
+        Dynamically adds 'attendees_list' field if the requesting user is an Officer.
+        """
+        representation = super().to_representation(instance)
+        request = self.context.get("request")
+
+        # Check if the user is an Officer using the custom permission class
+        # Note: We pass the request to has_permission for proper context.
+        if IsOfficer().has_permission(request, self.context.get("view")):
+            # If the user is an Officer, add the list of attendee usernames/full names
+            # You might want to use a nested serializer for more attendee details
+            representation["attendees_list"] = [
+                {
+                    "full_name": attendee.user.get_full_name(),
+                    "email": attendee.user.email,
+                    "contact_number": attendee.contact_number,
+                }
+                for attendee in instance.attendees.all()
+                if hasattr(attendee, "user")
+            ]
+        return representation
 
 
 class CreateEventSerializer(serializers.ModelSerializer):
-    creator_name = serializers.CharField(source="creator.get_full_name", read_only=True)
+    creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
     attendees_count = serializers.IntegerField(read_only=True)
-    is_attending = serializers.SerializerMethodField()
+    is_attending = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Event
-        # fields = ['name', 'date', 'details', 'location']
         fields = [
             "id",
             "name",
             "date",
+            "status",
             "details",
             "location",
             "creator",
-            "creator_name",
             "attendees_count",
             "is_attending",
+            "image",
             "created_at",
             "updated_at",
         ]
         read_only_fields = [
             "id",
-            "creator",
-            "creator_name",
+            "status",
             "attendees_count",
             "is_attending",
             "created_at",
@@ -69,9 +101,19 @@ class CreateEventSerializer(serializers.ModelSerializer):
         ]
 
     def get_is_attending(self, obj):
-        user = self.context["request"].user
-        return user.is_authenticated and user in obj.attendees.all()
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return request.user == obj.creator
+        return False
 
 
 class AttendEventSerializer(serializers.Serializer):
     action = serializers.ChoiceField(choices=["attend", "unattend"])
+
+
+class StatusUpdateSerializer(serializers.Serializer):
+    status = serializers.ChoiceField(
+        choices=[Event.EventStatus.CONFIRMED, Event.EventStatus.REJECTED],
+        required=True,
+        help_text="Set event status to 'confirmed' or 'rejected'.",
+    )
