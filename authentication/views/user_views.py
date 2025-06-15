@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django_filters.rest_framework import DjangoFilterBackend
+from django.contrib.auth.models import Group
 from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -9,7 +10,13 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.response import Response
 from authentication.models import User
 from authentication.permissions import IsAdminOrOfficer
-from authentication.serializers import UserSerializer, ResidentRegistrationSerializer, StaffRegistrationSerializer, AdminUserUpdateSerializer, UserWithResidenceSerializer
+from authentication.serializers import (
+    UserSerializer,
+    ResidentRegistrationSerializer,
+    StaffRegistrationSerializer,
+    AdminUserUpdateSerializer,
+    UserWithResidenceSerializer,
+)
 
 
 @api_view(["POST"])
@@ -36,8 +43,7 @@ def register_admin(request):
 @permission_classes([IsAuthenticated])
 def register_employee(request):
     user = request.user
-    serializer = UserSerializer(
-        data=request.data, context={'request': request})
+    serializer = UserSerializer(data=request.data, context={"request": request})
     if serializer.is_valid():
         user = serializer.create_employee_and_assign()
         if user:
@@ -97,7 +103,7 @@ class StaffRegistrationView(CreateAPIView):
         if not self.request.user.is_superuser:
             return Response(
                 {"error": "Only superadmins can create staff accounts"},
-                status=status.HTTP_403_FORBIDDEN
+                status=status.HTTP_403_FORBIDDEN,
             )
         serializer.save()
 
@@ -105,7 +111,7 @@ class StaffRegistrationView(CreateAPIView):
 class AdminUserViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated, IsAdminUser]
 
-    @action(detail=True, methods=['put', 'patch'])
+    @action(detail=True, methods=["put", "patch"])
     def permissions(self, request, pk=None):
         """Update user staff/superuser status (Admin only)"""
         target_user = get_object_or_404(User, pk=pk)
@@ -113,14 +119,11 @@ class AdminUserViewSet(viewsets.ViewSet):
         if target_user == request.user:
             return Response(
                 {"error": "Cannot modify your own permissions"},
-                status=status.HTTP_403_FORBIDDEN
+                status=status.HTTP_403_FORBIDDEN,
             )
 
         serializer = AdminUserUpdateSerializer(
-            target_user,
-            data=request.data,
-            partial=True,
-            context={'request': request}
+            target_user, data=request.data, partial=True, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -132,10 +135,10 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = UserWithResidenceSerializer
     permission_classes = [IsAdminOrOfficer]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['residence__role', 'is_staff', 'is_superuser']
-    search_fields = ['email', 'first_name', 'last_name']
-    ordering_fields = ['email', 'date_joined']
-    ordering = ['-date_joined']
+    filterset_fields = ["residence__role", "is_staff", "is_superuser"]
+    search_fields = ["email", "first_name", "last_name"]
+    ordering_fields = ["email", "date_joined"]
+    ordering = ["-date_joined"]
 
     def get_queryset(self):
         user = self.request.user
@@ -145,9 +148,29 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
             return User.objects.all()
 
         # Officers only see residents
-        return User.objects.filter(
-            is_staff=False,
-            is_superuser=False
+        return User.objects.filter(is_staff=False, is_superuser=False)
+
+    @action(detail=True, methods=["post"])
+    def set_group(self, request, pk=None):
+        user = self.get_object()
+        group_name = request.data.get("group")
+
+        if not group_name:
+            return Response({"error": "Group name is required"}, status=400)
+
+        try:
+            new_group = Group.objects.get(name=group_name)
+        except Group.DoesNotExist:
+            return Response({"error": f"Group '{group_name}' not found"}, status=404)
+
+        # Remove from all existing groups
+        user.groups.clear()
+
+        # Add to the new group
+        user.groups.add(new_group)
+
+        return Response(
+            {"status": f"User {user.email} assigned to group '{new_group.name}'"}
         )
 
 
@@ -155,6 +178,7 @@ class UserListViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Simple viewset to return basic user information
     """
+
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
 
@@ -162,7 +186,7 @@ class UserListViewSet(viewsets.ReadOnlyModelViewSet):
         # Only return the requesting user's data
         return User.objects.filter(id=self.request.user.id)
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=["get"])
     def me(self, request):
         """Convenience endpoint for getting current user's info"""
         serializer = self.get_serializer(request.user)

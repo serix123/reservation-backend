@@ -28,6 +28,7 @@ class NoticeViewSet(viewsets.ModelViewSet):
         "created_at",
         "title",
     ]
+    ordering = ["-created_at"]
 
     serializer_class = NoticeSerializer
 
@@ -95,7 +96,7 @@ class NoticeViewSet(viewsets.ModelViewSet):
 
         return super().destroy(request, *args, **kwargs)
 
-    @action(detail=True, methods=["put", "patch"], permission_classes=[IsAuthenticated])
+    @action(detail=True, methods=["put", "patch"], permission_classes=[IsOfficer])
     def upload(self, request, pk=None):
         """
         Dedicated endpoint for uploading/replacing ID notice

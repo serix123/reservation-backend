@@ -8,5 +8,4 @@ class NoticeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notice
         fields = ["id", "title", "details", "image", "created_at", "updated_at"]
-        # Make created_at and updated_at read-only as they're auto-managed
         read_only_fields = ["id", "created_at", "updated_at"]

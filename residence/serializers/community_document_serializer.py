@@ -68,12 +68,27 @@ class CommunityDocumentSerializer(serializers.ModelSerializer):
 class CreateCommunityDocumentSerializer(serializers.ModelSerializer):
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
+    # Use the nested DocumentCategorySerializer for the 'category' field
+    # This will display the category object (with name, parent, subcategories)
+    category = DocumentCategorySerializer(read_only=True)
+
+    # For writing (creating/updating CommunityDocument), you'll need 'category_id'
+    # as you'll be setting the ForeignKey by its ID.
+    category_id = serializers.PrimaryKeyRelatedField(
+        queryset=DocumentCategory.objects.all(),
+        source="category",
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+
     class Meta:
         model = CommunityDocument
         fields = [
             "id",
             "title",
-            "category",  # category can be set by ID
+            "category",
+            "category_id",  # category can be set by ID
             "id_document",
             "creator",
             "created_at",

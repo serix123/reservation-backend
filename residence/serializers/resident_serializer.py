@@ -24,9 +24,12 @@ class ResidenceSerializer(serializers.ModelSerializer):
             # 'user',
         ]
         read_only_fields = (
+            "user",
+            "user_email",
             "registration_date",
             "first_name",
             "last_name",
+            "user_groups",
         )
 
     def get_user_groups(self, obj):

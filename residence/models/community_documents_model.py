@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+
 class DocumentCategory(models.Model):
     category_name = models.CharField(max_length=100, unique=True)
     parent = models.ForeignKey(
@@ -15,6 +16,11 @@ class DocumentCategory(models.Model):
 
     def __str__(self):
         return f"{self.parent.category_name + ' > ' if self.parent else ''}{self.category_name}"
+
+    class Meta:
+        ordering = ["id"]
+        verbose_name = "Community Category"
+        verbose_name_plural = "Community Categories"
 
 
 class CommunityDocument(models.Model):

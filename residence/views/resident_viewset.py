@@ -24,7 +24,7 @@ class ResidenceViewSet(viewsets.ModelViewSet):
     ]
     filterset_fields = ['role', 'registration_date']
     ordering_fields = [
-        'registration_date',
+        '-registration_date',
         'first_name',
         'last_name'
     ]

@@ -48,6 +48,7 @@ class VisitorAdmin(admin.ModelAdmin):
 
 class IssueAdmin(admin.ModelAdmin):
     list_display = (
+        "id",
         "title",
         "status",
         "priority",
@@ -125,6 +126,7 @@ class IssueAdmin(admin.ModelAdmin):
 class EventAdmin(admin.ModelAdmin):
     # Fields displayed in the list view
     list_display = (
+        "id",
         "name",
         "date",
         "status",  # <<< Added: Display event status in the list
@@ -132,6 +134,7 @@ class EventAdmin(admin.ModelAdmin):
         "creator",
         "attendees_count",
         "created_at",
+        "image_thumbnail",
     )
 
     # Filters available in the right sidebar of the list view
@@ -172,6 +175,7 @@ class EventAdmin(admin.ModelAdmin):
                 "fields": (
                     "name",
                     "date",
+                    "image",
                     "status",
                     "details",
                     "location",
@@ -208,19 +212,17 @@ class EventAdmin(admin.ModelAdmin):
 
     send_event_reminders.short_description = "Send reminders for selected events"
 
-    # --- Optional: Further customization for status field editability ---
-    # If you only want superusers (not just any staff user) to change the status,
-    # you would override get_form or get_fieldsets.
-    # For example, to make 'status' read-only for non-superusers:
-    # def get_readonly_fields(self, request, obj=None):
-    #     readonly_fields = super().get_readonly_fields(request, obj)
-    #     if not request.user.is_superuser:
-    #         readonly_fields += ('status',) # Make status read-only for non-superusers
-    #     return readonly_fields
+    def image_thumbnail(self, obj):
+        if obj.image:
+            from django.utils.html import format_html
 
-    # Note on 'creator__email' vs 'creator__username':
-    # 'creator__email' is often better for searching, but 'creator__username' is a direct field.
-    # Adjust based on your User model's unique identifier used for login/display.
+            return format_html(
+                '<img src="{}" style="width: 100px; height: auto;" />', obj.image.url
+            )
+        return "No Image"
+
+    image_thumbnail.short_description = "Image Preview"
+    image_thumbnail.allow_tags = True
 
 
 class IssueCommentAdmin(admin.ModelAdmin):

@@ -21,9 +21,10 @@ class IssueViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filterset_fields = ["status", "priority"]
     filter_backends = [SmartSearchFilter, DjangoFilterBackend, OrderingFilter]
-    ordering_fields = ["reported_date", "resolved_date"]
+    ordering_fields = ["-reported_date", "-resolved_date"]
     search_fields = ["title", "description"]
     queryset = Issue.objects.all()
+    ordering = ["-reported_date", "-resolved_date"]
 
     def get_serializer_class(self):
         if self.action == "create":

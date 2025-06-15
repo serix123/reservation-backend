@@ -21,6 +21,7 @@ class EventSerializer(serializers.ModelSerializer):
             "name",
             "date",
             "status",
+            "image",
             "details",
             "location",
             "creator",
@@ -43,7 +44,7 @@ class EventSerializer(serializers.ModelSerializer):
     def get_is_attending(self, obj):
         request = self.context.get("request")
         if request and request.user.is_authenticated:
-            return request.user in obj.attendees.all()
+            return request.user.residence in obj.attendees.all()
         return False
 
     def to_representation(self, instance):
@@ -71,7 +72,8 @@ class EventSerializer(serializers.ModelSerializer):
 
 
 class CreateEventSerializer(serializers.ModelSerializer):
-    creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    # creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    creator_name = serializers.CharField(source="creator.get_full_name", read_only=True)
     attendees_count = serializers.IntegerField(read_only=True)
     is_attending = serializers.SerializerMethodField(read_only=True)
 
@@ -85,9 +87,9 @@ class CreateEventSerializer(serializers.ModelSerializer):
             "details",
             "location",
             "creator",
+            "creator_name",
             "attendees_count",
             "is_attending",
-            "image",
             "created_at",
             "updated_at",
         ]
@@ -95,6 +97,8 @@ class CreateEventSerializer(serializers.ModelSerializer):
             "id",
             "status",
             "attendees_count",
+            "creator",
+            "creator_name",
             "is_attending",
             "created_at",
             "updated_at",

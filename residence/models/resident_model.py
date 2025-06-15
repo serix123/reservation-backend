@@ -24,17 +24,17 @@ class Residence(models.Model):
     def save(self, *args, **kwargs):
         self.first_name = self.user.first_name
         self.last_name = self.user.last_name
-        # Automatically set role based on user's group
-        user_groups = self.user.groups.values_list("name", flat=True)
+        # # Automatically set role based on user's group
+        # user_groups = self.user.groups.values_list("name", flat=True)
 
-        if "Resident" in user_groups:
-            self.role = "Resident"
-        elif "Guard" in user_groups:
-            self.role = "Guard"
-        elif "Officer" in user_groups:
-            self.role = "Officer"
-        else:
-            self.role = "Resident"  # Default fallback
+        # if "Resident" in user_groups:
+        #     self.role = "Resident"
+        # elif "Guard" in user_groups:
+        #     self.role = "Guard"
+        # elif "Officer" in user_groups:
+        #     self.role = "Officer"
+        # else:
+        #     self.role = "Resident"  # Default fallback
         super().save(*args, **kwargs)
 
     def __str__(self):

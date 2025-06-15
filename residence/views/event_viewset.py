@@ -11,7 +11,7 @@ from rest_framework.permissions import (
 )
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from residence.models import Event
+from residence.models import Event, Residence
 from residence.permissions import IsOfficer, IsResident, CanViewAll
 from residence.serializers import (
     EventSerializer,
@@ -33,11 +33,13 @@ class EventViewSet(viewsets.ModelViewSet):
     ]  # Allow read for all, write for authenticated
     filterset_fields = ["creator", "date", "status"]  # Added 'status' for filtering
     ordering_fields = [
-        "date",
+        "-date",
+        "-created_at",
+        "-updated_at",
         "attendees_count",
-        "created_at",
-        "updated_at",
     ]  # Added timestamps for ordering
+
+    ordering = ["-date", "-updated_at", "-created_at"]
 
     filter_backends = [SmartSearchFilter, DjangoFilterBackend, OrderingFilter]
     search_fields = [
@@ -96,7 +98,7 @@ class EventViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         event = serializer.save(creator=self.request.user)
-        event.attendees.add(self.request.user)
+        event.attendees.add(self.request.user.residence)
 
     # Officer Permissions: Update (PATCH/PUT) and Delete
     def update(self, request, *args, **kwargs):
@@ -131,18 +133,32 @@ class EventViewSet(viewsets.ModelViewSet):
 
         action_type = serializer.validated_data["action"]
         user = request.user
+        try:
+            # Method 1: Directly access the related_name
+            # This is the most common and direct way.
+            residence_instance = user.residence
 
+            # Method 2: If you want to be extra explicit or handle DoesNotExist gracefully
+            # This is useful if the OneToOneField on Residence was nullable (which it isn't by default here)
+            # or if you anticipate a User might not have a Residence profile yet for some reason.
+            # residence_instance = Residence.objects.get(user=user)
+
+        except Residence.DoesNotExist:
+            return Response(
+                {"detail": "Residence profile not found for this user."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
         if action_type == "attend":
-            if user not in event.attendees.all():
-                event.attendees.add(user)
+            if residence_instance not in event.attendees.all():
+                event.attendees.add(residence_instance)
                 message = "Successfully joined the event."
                 status_code = status.HTTP_200_OK
             else:
                 message = "You are already attending this event."
                 status_code = status.HTTP_409_CONFLICT
         elif action_type == "unattend":
-            if user in event.attendees.all():
-                event.attendees.remove(user)
+            if residence_instance in event.attendees.all():
+                event.attendees.remove(residence_instance)
                 message = "Successfully unjoined the event."
                 status_code = status.HTTP_200_OK
             else:
