@@ -20,7 +20,7 @@ class EventSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "date",
-            "status",
+            # "status",
             "image",
             "details",
             "location",

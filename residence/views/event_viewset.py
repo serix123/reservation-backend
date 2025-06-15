@@ -31,7 +31,7 @@ class EventViewSet(viewsets.ModelViewSet):
     permission_classes = [
         IsAuthenticatedOrReadOnly
     ]  # Allow read for all, write for authenticated
-    filterset_fields = ["creator", "date", "status"]  # Added 'status' for filtering
+    filterset_fields = ["creator", "date"]  # Added 'status' for filtering
     ordering_fields = [
         "-date",
         "-created_at",
