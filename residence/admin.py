@@ -520,11 +520,11 @@ class NoticeAdmin(admin.ModelAdmin):
 
 
 admin.site.register(CommunityDocument, CommunityDocumentAdmin)
-admin.site.register(CommunityResource, CommunityResourceAdmin)
+# admin.site.register(CommunityResource, CommunityResourceAdmin)
 admin.site.register(DocumentCategory, DocumentCategoryAdmin)
 admin.site.register(Event, EventAdmin)
 admin.site.register(Issue, IssueAdmin)
 admin.site.register(IssueComment, IssueCommentAdmin)
 admin.site.register(Notice, NoticeAdmin)
 admin.site.register(Residence, ResidenceAdmin)
-admin.site.register(Visitor, VisitorAdmin)
+# admin.site.register(Visitor, VisitorAdmin)
