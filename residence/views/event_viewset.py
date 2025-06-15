@@ -75,19 +75,20 @@ class EventViewSet(viewsets.ModelViewSet):
         user = self.request.user
 
         if user.is_authenticated:
+            return queryset
             # Users who can view all events (Officers, Superusers)
-            if CanViewAll().has_permission(self.request, self):
-                return queryset
-            else:
-                # Other authenticated users (Residents, Guards) see:
-                # 1. Events they created (if any)
-                # 2. Events with 'CONFIRMED' status
-                return queryset.filter(
-                    Q(creator=user) | Q(status=Event.EventStatus.CONFIRMED)
-                ).distinct()
-        else:
-            # Unauthenticated users only see 'CONFIRMED' events
-            return queryset.filter(status=Event.EventStatus.CONFIRMED)
+            # if CanViewAll().has_permission(self.request, self):
+            #     return queryset
+            # else:
+            #     # Other authenticated users (Residents, Guards) see:
+            #     # 1. Events they created (if any)
+            #     # 2. Events with 'CONFIRMED' status
+            #     return queryset.filter(
+            #         Q(creator=user) | Q(status=Event.EventStatus.CONFIRMED)
+            #     ).distinct()
+        # else:
+        #     # Unauthenticated users only see 'CONFIRMED' events
+        #     return queryset.filter(status=Event.EventStatus.CONFIRMED)
 
     # Officer Permissions: Create
     def create(self, request, *args, **kwargs):
@@ -185,23 +186,23 @@ class EventViewSet(viewsets.ModelViewSet):
         )  # Use StatusUpdateSerializer
         serializer.is_valid(raise_exception=True)
 
-        new_status = serializer.validated_data["status"]
+        # new_status = serializer.validated_data["status"]
 
-        # Optional: Add specific business logic for transitions if needed
-        # For example, prevent re-confirming an already confirmed event, etc.
-        if event.status == new_status:
-            return Response(
-                {"detail": f"Event is already {new_status}."},
-                status=status.HTTP_409_CONFLICT,
-            )
-        if (
-            new_status == Event.EventStatus.CONFIRMED
-            and event.status == Event.EventStatus.REJECTED
-        ):
-            return Response(
-                {"detail": "Cannot confirm a rejected event directly."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        # # Optional: Add specific business logic for transitions if needed
+        # # For example, prevent re-confirming an already confirmed event, etc.
+        # if event.status == new_status:
+        #     return Response(
+        #         {"detail": f"Event is already {new_status}."},
+        #         status=status.HTTP_409_CONFLICT,
+        #     )
+        # if (
+        #     new_status == Event.EventStatus.CONFIRMED
+        #     and event.status == Event.EventStatus.REJECTED
+        # ):
+        #     return Response(
+        #         {"detail": "Cannot confirm a rejected event directly."},
+        #         status=status.HTTP_400_BAD_REQUEST,
+        #     )
 
         event.status = new_status
         event.save()  # This will automatically update 'updated_at'

@@ -129,7 +129,7 @@ class EventAdmin(admin.ModelAdmin):
         "id",
         "name",
         "date",
-        "status",  # <<< Added: Display event status in the list
+        # "status",  # <<< Added: Display event status in the list
         "location",
         "creator",
         "attendees_count",
@@ -139,7 +139,7 @@ class EventAdmin(admin.ModelAdmin):
 
     # Filters available in the right sidebar of the list view
     list_filter = (
-        "status",  # <<< Added: Allow filtering by event status
+        # "status",  # <<< Added: Allow filtering by event status
         "date",
         "created_at",
     )
@@ -176,7 +176,7 @@ class EventAdmin(admin.ModelAdmin):
                     "name",
                     "date",
                     "image",
-                    "status",
+                    # "status",
                     "details",
                     "location",
                 )  # <<< Added: status to event details

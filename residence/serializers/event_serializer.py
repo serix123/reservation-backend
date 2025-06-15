@@ -83,7 +83,7 @@ class CreateEventSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "date",
-            "status",
+            # "status",
             "details",
             "location",
             "creator",
@@ -95,7 +95,7 @@ class CreateEventSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "id",
-            "status",
+            # "status",
             "attendees_count",
             "creator",
             "creator_name",

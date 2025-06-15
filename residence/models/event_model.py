@@ -14,20 +14,18 @@ class Event(models.Model):
 
     name = models.CharField(max_length=200)
     date = models.DateTimeField(default=timezone.now)
-    status = models.CharField(
-        max_length=20, choices=EventStatus.choices, default=EventStatus.TENTATIVE
-    )
+    # status = models.CharField(
+    #     max_length=20, choices=EventStatus.choices, default=EventStatus.TENTATIVE
+    # )
     details = models.TextField()
     location = models.CharField(max_length=255)
     creator = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='created_events',
+        related_name="created_events",
     )
     attendees = models.ManyToManyField(
-        Residence,
-        related_name='attended_events',
-        blank=True
+        Residence, related_name="attended_events", blank=True
     )
     image = models.ImageField(upload_to="event_images/", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
