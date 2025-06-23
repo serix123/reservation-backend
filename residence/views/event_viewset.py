@@ -122,7 +122,7 @@ class EventViewSet(viewsets.ModelViewSet):
         return super().destroy(request, *args, **kwargs)
 
     @action(
-        detail=True, methods=["post"], permission_classes=[IsResident | IsOfficer]
+        detail=True, methods=["post"], permission_classes=[IsAuthenticatedOrReadOnly]
     )  # Officer can also attend
     def attend(self, request, pk=None):
         """

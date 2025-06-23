@@ -19,7 +19,7 @@ from residence.serializers import (
 
 class IssueViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
-    filterset_fields = ["status", "priority"]
+    filterset_fields = ["status", "priority", "assigned_to"]
     filter_backends = [SmartSearchFilter, DjangoFilterBackend, OrderingFilter]
     ordering_fields = ["-reported_date", "-resolved_date"]
     search_fields = ["title", "description"]
@@ -27,10 +27,10 @@ class IssueViewSet(viewsets.ModelViewSet):
     ordering = ["-reported_date", "-resolved_date"]
 
     def get_serializer_class(self):
-        if self.action == "create":
-            return CreateIssueSerializer
-        if self.action == "resolve":
-            return ResolveIssueSerializer
+        # if self.action == "create":
+        #     return CreateIssueSerializer
+        # if self.action == "resolve":
+        #     return ResolveIssueSerializer
         return IssueSerializer
 
     def get_queryset(self):

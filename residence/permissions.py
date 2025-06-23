@@ -59,8 +59,13 @@ class IsResident(permissions.BasePermission):
         )
 
     def has_object_permission(self, request, view, obj):
-        # Residents only have object permission for their own issues
-        return obj.user == request.user and self.has_permission(request, view)
+        # Check if the object has a `user` or `creator` attribute
+        owner = getattr(obj, "user", None) or getattr(obj, "creator", None)
+
+        if owner is None:
+            return False  # If neither exists, deny access
+
+        return owner == request.user and self.has_permission(request, view)
 
 
 class IsGuard(permissions.BasePermission):

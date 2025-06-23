@@ -46,6 +46,13 @@ class VisitorAdmin(admin.ModelAdmin):
     ordering = ["name", "visit_date", "residence"]
 
 
+class IssueCommentInline(admin.TabularInline):  # or admin.StackedInline
+    model = IssueComment
+    extra = 1  # Number of empty forms shown
+    fields = ["user", "comment", "created_at"]
+    readonly_fields = ["created_at"]
+
+
 class IssueAdmin(admin.ModelAdmin):
     list_display = (
         "id",
@@ -53,6 +60,7 @@ class IssueAdmin(admin.ModelAdmin):
         "status",
         "priority",
         "user",
+        "assigned_to",
         "reported_date",
         "resolved_date",
         "image_thumbnail",  # Added image_thumbnail
@@ -68,11 +76,13 @@ class IssueAdmin(admin.ModelAdmin):
         "description",
         "user__email",  # Changed 'resident__user__email' to 'user__email'
         "user__username",  # Added search by username
+        "assigned_to__email",  # Changed 'resident__user__email' to 'user__email'
+        "assigned_to__username",  # Added search by username
     )
-    raw_id_fields = ("user",)  # Changed 'resident' to 'user'
+    raw_id_fields = ("user", "assigned_to")  # Changed 'resident' to 'user'
     date_hierarchy = "reported_date"
     readonly_fields = ("reported_date", "resolved_date")
-
+    inlines = [IssueCommentInline]
     fieldsets = (
         (
             None,
@@ -94,7 +104,7 @@ class IssueAdmin(admin.ModelAdmin):
                 )
             },
         ),
-        ("Reporter Information", {"fields": ("user",)}),
+        ("Reporter Information", {"fields": ("user", "assigned_to")}),
         ("Timestamps", {"fields": ("reported_date",)}),
     )
 
