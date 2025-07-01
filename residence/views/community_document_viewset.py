@@ -29,7 +29,8 @@ class CommunityDocumentViewSet(viewsets.ModelViewSet):
         "creator__email",
         "category__category_name",  # <<< Updated for new category_name field
     ]
-    ordering_fields = ["created_at", "title", "category__category_name"]  # <<< Updated
+    ordering_fields = ["created_at", "updated_at", "title", "category__category_name"]
+    ordering = ["-created_at", "-updated_at"]
 
     def get_serializer_class(self):
         if self.action == "create":

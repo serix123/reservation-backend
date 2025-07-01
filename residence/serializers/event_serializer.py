@@ -20,7 +20,7 @@ class EventSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "date",
-            # "status",
+            "duration",
             "image",
             "details",
             "location",
@@ -56,18 +56,18 @@ class EventSerializer(serializers.ModelSerializer):
 
         # Check if the user is an Officer using the custom permission class
         # Note: We pass the request to has_permission for proper context.
-        if IsOfficer().has_permission(request, self.context.get("view")):
-            # If the user is an Officer, add the list of attendee usernames/full names
-            # You might want to use a nested serializer for more attendee details
-            representation["attendees_list"] = [
-                {
-                    "full_name": attendee.user.get_full_name(),
-                    "email": attendee.user.email,
-                    "contact_number": attendee.contact_number,
-                }
-                for attendee in instance.attendees.all()
-                if hasattr(attendee, "user")
-            ]
+        # if IsOfficer().has_permission(request, self.context.get("view")):
+        # If the user is an Officer, add the list of attendee usernames/full names
+        # You might want to use a nested serializer for more attendee details
+        representation["attendees_list"] = [
+            {
+                "full_name": attendee.user.get_full_name(),
+                "email": attendee.user.email,
+                "contact_number": attendee.contact_number,
+            }
+            for attendee in instance.attendees.all()
+            if hasattr(attendee, "user")
+        ]
         return representation
 
 
@@ -83,7 +83,7 @@ class CreateEventSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "date",
-            # "status",
+            "duration",
             "details",
             "location",
             "creator",

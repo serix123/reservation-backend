@@ -28,7 +28,7 @@ class NoticeViewSet(viewsets.ModelViewSet):
         "created_at",
         "title",
     ]
-    ordering = ["-created_at"]
+    ordering = ["-created_at", "-updated_at"]
 
     serializer_class = NoticeSerializer
 

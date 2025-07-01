@@ -3,6 +3,8 @@ from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from collections import OrderedDict
+from django.db.models import Count
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -19,10 +21,13 @@ from residence.serializers import (
 
 class IssueViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
-    filterset_fields = ["status", "priority", "assigned_to"]
+    filterset_fields = ["status", "priority", "assigned_to", "issue_type"]
     filter_backends = [SmartSearchFilter, DjangoFilterBackend, OrderingFilter]
     ordering_fields = ["-reported_date", "-resolved_date"]
-    search_fields = ["title", "description"]
+    search_fields = [
+        "title",
+        "assigned_to",
+    ]
     queryset = Issue.objects.all()
     ordering = ["-reported_date", "-resolved_date"]
 
@@ -56,6 +61,29 @@ class IssueViewSet(viewsets.ModelViewSet):
         if instance.image:
             instance.image.delete(save=False)
         return super().destroy(request, *args, **kwargs)
+
+    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
+    def status_summary(self, request):
+        """
+        Returns a summary count of issues grouped by their status.
+        Endpoint: /api/issues/status_summary/
+        """
+        queryset = self.filter_queryset(self.get_queryset())
+        # Use values + annotate to group by 'status'
+        summary = (
+            queryset.values("status").annotate(count=Count("id")).order_by("status")
+        )
+
+        # Start with all statuses set to 0
+        all_statuses = OrderedDict(
+            (status, 0) for status, _ in Issue.IssueStatus.choices
+        )
+
+        # Update with actual counts
+        for item in summary:
+            all_statuses[item["status"]] = item["count"]
+
+        return Response(all_statuses)
 
     @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
     def my_drafts(self, request):  # Action name changed for clarity
@@ -124,7 +152,7 @@ class IssueViewSet(viewsets.ModelViewSet):
 class IssueCommentViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = ["issue"]
-    ordering_fields = ["-created_at"]
+    ordering_fields = ["created_at"]
     queryset = IssueComment.objects.all()
     serializer_class = IssueCommentSerializer
     permission_classes = [permissions.IsAuthenticated]

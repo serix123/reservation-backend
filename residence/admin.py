@@ -29,7 +29,7 @@ class ResidenceAdmin(admin.ModelAdmin):
     ]
     list_filter = ["role"]
     search_fields = ["first_name", "last_name", "role"]
-    ordering = ["first_name", "last_name", "role"]
+    ordering = ["-registration_date", "first_name", "last_name"]
 
 
 class VisitorAdmin(admin.ModelAdmin):
@@ -51,6 +51,7 @@ class IssueCommentInline(admin.TabularInline):  # or admin.StackedInline
     extra = 1  # Number of empty forms shown
     fields = ["user", "comment", "created_at"]
     readonly_fields = ["created_at"]
+    ordering = ["created_at"]
 
 
 class IssueAdmin(admin.ModelAdmin):
@@ -59,10 +60,10 @@ class IssueAdmin(admin.ModelAdmin):
         "title",
         "status",
         "priority",
+        "issue_type",
         "user",
         "assigned_to",
         "reported_date",
-        "resolved_date",
         "image_thumbnail",  # Added image_thumbnail
     )
     list_filter = (
@@ -70,6 +71,7 @@ class IssueAdmin(admin.ModelAdmin):
         "priority",  # Added priority to list filters
         "reported_date",
         "resolved_date",
+        "issue_type",
     )
     search_fields = (
         "title",
@@ -82,6 +84,7 @@ class IssueAdmin(admin.ModelAdmin):
     raw_id_fields = ("user", "assigned_to")  # Changed 'resident' to 'user'
     date_hierarchy = "reported_date"
     readonly_fields = ("reported_date", "resolved_date")
+    ordering = ["-reported_date", "-resolved_date"]
     inlines = [IssueCommentInline]
     fieldsets = (
         (
@@ -90,6 +93,7 @@ class IssueAdmin(admin.ModelAdmin):
                 "fields": (
                     "title",
                     "description",
+                    "issue_type",
                     "image",
                 )
             },
@@ -139,7 +143,8 @@ class EventAdmin(admin.ModelAdmin):
         "id",
         "name",
         "date",
-        # "status",  # <<< Added: Display event status in the list
+        "duration",
+        "end_time",
         "location",
         "creator",
         "attendees_count",
@@ -163,6 +168,12 @@ class EventAdmin(admin.ModelAdmin):
         "creator__email",
     )  # Adjusted creator search
 
+    ordering = [
+        "-created_at",
+        "-updated_at",
+        "-date",
+    ]
+
     # Use a neat horizontal filter for ManyToMany fields
     filter_horizontal = ("attendees",)
 
@@ -175,7 +186,12 @@ class EventAdmin(admin.ModelAdmin):
     # Fields that cannot be edited via the admin form
     # created_at and updated_at are handled by auto_now/auto_now_add
     # attendees_count is a @property and should not be editable
-    readonly_fields = ("created_at", "updated_at", "attendees_count")
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+        "attendees_count",
+        "end_time",
+    )
 
     # Organize fields into collapsible sections on the edit/add form
     fieldsets = (
@@ -186,10 +202,11 @@ class EventAdmin(admin.ModelAdmin):
                     "name",
                     "date",
                     "image",
-                    # "status",
+                    "duration",
+                    "end_time",
                     "details",
                     "location",
-                )  # <<< Added: status to event details
+                )
             },
         ),
         (
@@ -424,6 +441,8 @@ class CommunityDocumentAdmin(admin.ModelAdmin):
         ),
     )
 
+    ordering = ["-created_at", "-updated_at", "category__category_name"]
+
     # Custom method to display category name, using its __str__ for full path
     def category_display(self, obj):
         return obj.category.__str__() if obj.category else "-"
@@ -503,6 +522,8 @@ class NoticeAdmin(admin.ModelAdmin):
             },
         ),
     )
+
+    ordering = ["-created_at", "-updated_at"]
 
     # Custom method to display a small thumbnail of the image in the list_display
     def image_thumbnail(self, obj):

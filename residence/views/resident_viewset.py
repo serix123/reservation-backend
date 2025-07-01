@@ -22,7 +22,7 @@ class ResidenceViewSet(viewsets.ModelViewSet):
     search_fields = ["first_name", "last_name", "role", "contact_number", "address"]
     filterset_fields = ["role", "registration_date"]
     ordering_fields = ["-registration_date", "first_name", "last_name"]
-    ordering = ["-registration_date"]  # Default ordering
+    ordering = ["-registration_date", "first_name", "last_name"]  # Default ordering
 
     def get_serializer_class(self):
         if self.action == "create":
@@ -64,3 +64,12 @@ class ResidenceViewSet(viewsets.ModelViewSet):
             # last_name=serializer.validated_data.get(
             #     'last_name', user.last_name)
         )
+
+    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
+    def population_summary(self, request):
+        """
+        Returns the total number of residents in the community.
+        Endpoint: /api/residence/population_summary/
+        """
+        total_population = self.get_queryset().count()
+        return Response({"total_population": total_population})

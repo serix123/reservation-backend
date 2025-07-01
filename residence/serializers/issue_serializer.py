@@ -23,7 +23,7 @@ class IssueSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "title",
-            "description",
+            "issue_type",
             "status",
             "priority",
             "image",
@@ -79,7 +79,7 @@ class CreateIssueSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "title",
-            "description",
+            "issue_type",
             "status",
             "priority",
             "image",

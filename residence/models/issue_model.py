@@ -25,6 +25,20 @@ class Issue(models.Model):
         max_length=20, choices=IssueStatus.choices, default=IssueStatus.OPEN
     )
 
+    class IssueType(models.TextChoices):
+        MAINTENANCE = "maintenance", "Maintenance and Infrastructure Issue"
+        SECURITY = "security", "Security and Safety Concern"
+        CLEANLINESS = "cleanliness", "Cleanliness and Sanitation"
+        NEIGHBOR = "neighbor", "Neighbor-Related Complaint"
+        ADMINISTRATIVE = "administrative", "Administrative or Community Concern"
+
+    issue_type = models.CharField(
+        max_length=20,
+        choices=IssueType.choices,
+        default=IssueType.MAINTENANCE,
+        help_text="Categorize the issue type for better tracking.",
+    )
+
     priority = models.CharField(
         max_length=10, choices=PriorityLevel.choices, default=PriorityLevel.MEDIUM
     )
