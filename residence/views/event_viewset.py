@@ -32,7 +32,10 @@ class EventViewSet(viewsets.ModelViewSet):
     permission_classes = [
         IsAuthenticatedOrReadOnly
     ]  # Allow read for all, write for authenticated
-    filterset_fields = ["creator", "date"]  # Added 'status' for filtering
+    filterset_fields = {
+        "creator": ["exact"],
+        "date": ["exact", "gte", "lte", "lt", "gt"],
+    }  # Added 'status' for filtering
     ordering_fields = [
         "date",
         "created_at",
@@ -46,8 +49,6 @@ class EventViewSet(viewsets.ModelViewSet):
     ]
     filter_backends = [SmartSearchFilter, DjangoFilterBackend, OrderingFilter]
     search_fields = [
-        "creator__first_name",
-        "creator__last_name",
         "name",
         "location",
         "details",
