@@ -1,6 +1,7 @@
-from django.db.models import Q
+from django.db.models import Q, F, ExpressionWrapper, DateTimeField
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
+from datetime import timedelta
 from core.filters import SmartSearchFilter
 from rest_framework import viewsets, status
 from rest_framework.filters import OrderingFilter
@@ -237,31 +238,43 @@ class EventViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["get"])
     def past(self, request):
         """
-        Retrieves past events (before now).
-        Applies general visibility rules from get_queryset.
+        Retrieves past events: events whose end_time (date + duration) is before today.
+        Calculated in Python after retrieving events in DB filter.
         """
-        queryset = self.filter_queryset(
-            self.get_queryset().filter(date__lt=timezone.now())
-        ).order_by("-date")
+        now = timezone.now()
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
-        page = self.paginate_queryset(queryset)
+        # Fetch candidate events before today; exclude obvious future events first
+        queryset = self.filter_queryset(
+            self.get_queryset().filter(date__lt=now)  # Narrow down dataset
+        )
+
+        # Evaluate queryset and calculate end_time in Python
+        past_events = [
+            event
+            for event in queryset
+            if event.end_time and event.end_time < today_start
+        ]
+
+        page = self.paginate_queryset(past_events)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
 
-        serializer = self.get_serializer(queryset, many=True)
+        serializer = self.get_serializer(past_events, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=["get"])
     def ongoing_this_month(self, request):
         """
-        Retrieves events ongoing this month (from the 1st of the current month to its end).
-        Applies general visibility rules from get_queryset.
+        Retrieves events that have already started but not yet finished,
+        within the current month. Events must have started <= now and
+        end_time must be >= now. Evaluated in Python.
         """
         now = timezone.now()
-        start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
-        # Calculate end of month correctly
+        # Define start and end of current month
+        start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         if now.month == 12:
             end_of_month = now.replace(
                 year=now.year + 1,
@@ -271,22 +284,35 @@ class EventViewSet(viewsets.ModelViewSet):
                 minute=0,
                 second=0,
                 microsecond=0,
-            ) - timezone.timedelta(microseconds=1)
+            ) - timedelta(microseconds=1)
         else:
             end_of_month = now.replace(
-                month=now.month + 1, day=1, hour=0, minute=0, second=0, microsecond=0
-            ) - timezone.timedelta(microseconds=1)
+                month=now.month + 1,
+                day=1,
+                hour=0,
+                minute=0,
+                second=0,
+                microsecond=0,
+            ) - timedelta(microseconds=1)
 
+        # Step 1: get events starting within the month
         queryset = self.filter_queryset(
             self.get_queryset().filter(date__range=(start_of_month, end_of_month))
         ).order_by("date")
 
-        page = self.paginate_queryset(queryset)
+        # Step 2: keep events already started and not yet finished
+        ongoing_events = [
+            event
+            for event in queryset
+            if event.date <= now and event.end_time and event.end_time >= now
+        ]
+
+        page = self.paginate_queryset(ongoing_events)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
 
-        serializer = self.get_serializer(queryset, many=True)
+        serializer = self.get_serializer(ongoing_events, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=["get"])

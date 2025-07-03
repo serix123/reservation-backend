@@ -26,7 +26,10 @@ class IssueViewSet(viewsets.ModelViewSet):
     ordering_fields = ["-reported_date", "-resolved_date"]
     search_fields = [
         "title",
-        "assigned_to",
+        "assigned_to__first_name",
+        "assigned_to__last_name",
+        "user__first_name",
+        "user__last_name",
     ]
     queryset = Issue.objects.all()
     ordering = ["-reported_date", "-resolved_date"]
